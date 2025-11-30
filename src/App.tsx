@@ -1,24 +1,27 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
-// Pages
 import AuthPage from './pages/AuthPage';
 import DashboardPage from './pages/DashboardPage';
 import RoomsPage from './pages/RoomsPage';
 import RoomDetailPage from './pages/RoomDetailPage';
 import EventsPage from './pages/EventsPage';
 import EventDetailPage from './pages/EventDetailPage';
-
-// Layout
 import AppLayout from './components/layout/AppLayout';
+import { useAuthStore } from './store/authStore';
 
 function App() {
+  const { initializeAuth } = useAuthStore();
+
+  useEffect(() => {
+    initializeAuth();
+  }, [initializeAuth]);
+
   return (
     <>
       <Router>
         <Routes>
-          {/* Auth */}
           <Route path="/auth" element={<AuthPage />} />
           
           {/* Protected Routes */}
