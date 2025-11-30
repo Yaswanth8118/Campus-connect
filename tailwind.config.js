@@ -22,20 +22,22 @@ export default {
           900: '#7f311f',
           950: '#45170d',
         },
-        // Premium dark theme colors - High contrast system
+        // Premium DEEP dark theme colors - Much darker
         dark: {
-          50: '#F4F4F5',   // Brightest text
-          100: '#E4E4E7',  // Headers
-          200: '#D1D1D5',  // Subheaders
-          300: '#A1A1AA',  // Body text
-          400: '#71717A',  // Muted text
-          500: '#52525B',  // Borders/dividers
-          600: '#3F3F46',  // Hover states
-          700: '#2A2D33',  // Card borders
-          800: '#202226',  // Card backgrounds
-          850: '#1A1C1F',  // Elevated surfaces
-          900: '#131416',  // Medium backgrounds
-          950: '#0F0F11',  // Deepest backgrounds
+          50: '#F9FAFB',   // Brightest text
+          100: '#F3F4F6',  // Headers
+          200: '#E5E7EB',  // Subheaders
+          300: '#D1D5DB',  // Body text
+          400: '#9CA3AF',  // Muted text
+          500: '#6B7280',  // Borders/dividers
+          600: '#4B5563',  // Hover states
+          700: '#374151',  // Card borders
+          800: '#1F2937',  // Card backgrounds
+          850: '#18202F',  // Elevated surfaces
+          900: '#111827',  // Medium backgrounds
+          925: '#0D1117',  // Deeper background
+          950: '#090B10',  // Deepest backgrounds
+          975: '#040507',  // Pure black variant
         },
         // Accent colors for dark theme
         accent: {
@@ -180,13 +182,13 @@ export default {
         xs: '2px',
       },
       boxShadow: {
-        'dark-sm': '0 1px 2px 0 rgba(0, 0, 0, 0.3)',
-        'dark-md': '0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3)',
-        'dark-lg': '0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3)',
-        'dark-xl': '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3)',
-        'glow-primary': '0 0 20px rgba(237, 117, 68, 0.3)',
-        'glow-cyan': '0 0 20px rgba(34, 211, 238, 0.3)',
-        'glow-green': '0 0 20px rgba(74, 222, 128, 0.3)',
+        'dark-sm': '0 1px 2px 0 rgba(0, 0, 0, 0.5)',
+        'dark-md': '0 4px 6px -1px rgba(0, 0, 0, 0.6), 0 2px 4px -1px rgba(0, 0, 0, 0.4)',
+        'dark-lg': '0 10px 15px -3px rgba(0, 0, 0, 0.7), 0 4px 6px -2px rgba(0, 0, 0, 0.5)',
+        'dark-xl': '0 20px 25px -5px rgba(0, 0, 0, 0.8), 0 10px 10px -5px rgba(0, 0, 0, 0.5)',
+        'glow-primary': '0 0 30px rgba(237, 117, 68, 0.4), 0 0 60px rgba(237, 117, 68, 0.2)',
+        'glow-cyan': '0 0 30px rgba(34, 211, 238, 0.4), 0 0 60px rgba(34, 211, 238, 0.2)',
+        'glow-green': '0 0 30px rgba(74, 222, 128, 0.4), 0 0 60px rgba(74, 222, 128, 0.2)',
       },
     },
   },
