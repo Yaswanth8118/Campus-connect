@@ -20,11 +20,11 @@ const AppLayout: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-black">
+    <div className="min-h-screen bg-gray-50">
       <Header />
       <div className="flex">
         <Sidebar />
-        <main className="flex-1 p-8 pb-16 overflow-y-auto">
+        <main className="flex-1 p-6 pb-16 overflow-y-auto">
           <div className="container mx-auto max-w-7xl">
             <Outlet />
           </div>

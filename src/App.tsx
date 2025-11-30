@@ -14,8 +14,6 @@ import { ReportsPage } from './pages/ReportsPage';
 import { AssignmentsPage } from './pages/AssignmentsPage';
 import { GradesPage } from './pages/GradesPage';
 import { SettingsPage } from './pages/SettingsPage';
-import AttendancePage from './pages/AttendancePage';
-import { CoordinatorAttendancePage } from './pages/CoordinatorAttendancePage';
 
 // Layout
 import AppLayout from './components/layout/AppLayout';
@@ -45,8 +43,6 @@ function App() {
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/assignments" element={<AssignmentsPage />} />
             <Route path="/grades" element={<GradesPage />} />
-            <Route path="/attendance" element={<AttendancePage />} />
-            <Route path="/attendance/manage" element={<CoordinatorAttendancePage />} />
 
             {/* Settings */}
             <Route path="/settings" element={<SettingsPage />} />

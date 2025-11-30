@@ -145,11 +145,11 @@ const AuthPage: React.FC = () => {
             <div className="flex items-center mb-8">
               <motion.div 
                 className="w-20 h-20 mr-6 relative"
-                whileHover={{ scale: 3.9, rotate: 5 }}
+                whileHover={{ scale: 1.1, rotate: 5 }}
                 transition={{ type: "spring", stiffness: 400, damping: 10 }}
               >
                 <img 
-                  src="/campusconnect.png" 
+                  src="/campus connect.png" 
                   alt="Campus Connect Logo" 
                   className="w-full h-full object-contain drop-shadow-2xl"
                 />

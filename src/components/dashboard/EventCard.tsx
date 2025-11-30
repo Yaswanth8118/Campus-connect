@@ -12,41 +12,34 @@ interface EventCardProps {
 
 const EventCard: React.FC<EventCardProps> = ({ event, onClick }) => {
   const isLive = event.isLive;
-
+  
   return (
-    <Card
-      hoverable
+    <Card 
+      hoverable 
+      className="transition-all duration-200 hover:translate-y-[-2px]"
       onClick={onClick}
     >
-      <CardBody className="space-y-4">
-        <div className="flex justify-between items-start gap-3">
-          <h3 className="font-bold text-xl text-gray-900 dark:text-dark-50 line-clamp-1 flex-1 tracking-tight">
+      <CardBody>
+        <div className="flex justify-between items-start mb-2">
+          <h3 className="font-semibold text-lg text-gray-800 line-clamp-1">
             {event.title}
           </h3>
           {isLive ? (
-            <Badge variant="danger" className="animate-pulse shrink-0">
-              Live Now
-            </Badge>
+            <Badge variant="danger" className="animate-pulse">Live Now</Badge>
           ) : (
-            <Badge variant="secondary" className="shrink-0">
-              Upcoming
-            </Badge>
+            <Badge variant="secondary">Upcoming</Badge>
           )}
         </div>
-
-        <p className="text-gray-600 dark:text-dark-300 text-sm leading-relaxed line-clamp-2 min-h-[2.5rem]">
+        
+        <p className="text-gray-600 text-sm mb-4 line-clamp-2">
           {event.description}
         </p>
-
-        <div className="flex items-center gap-4 pt-2 border-t border-gray-200/50 dark:border-dark-700/50 text-sm font-medium">
-          <div className="flex items-center gap-2 text-gray-500 dark:text-dark-400">
-            <Calendar size={16} className="text-primary-500 dark:text-primary-400" />
-            <span>{formatDate(event.startTime)}</span>
-          </div>
-          <div className="flex items-center gap-2 text-gray-500 dark:text-dark-400">
-            <Clock size={16} className="text-primary-500 dark:text-primary-400" />
-            <span>{formatTime(event.startTime)}</span>
-          </div>
+        
+        <div className="flex items-center text-gray-500 text-sm">
+          <Calendar size={14} className="mr-1" />
+          <span className="mr-3">{formatDate(event.startTime)}</span>
+          <Clock size={14} className="mr-1" />
+          <span>{formatTime(event.startTime)}</span>
         </div>
       </CardBody>
     </Card>

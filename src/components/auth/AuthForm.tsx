@@ -7,13 +7,24 @@ import GradientText from '../ui/GradientText';
 import { useAuthStore } from '../../store/authStore';
 import { UserRole } from '../../types';
 
+enum AuthStep {
+  EMAIL,
+  OTP,
+  USER_INFO,
+  PASSWORD,
+  LOGIN,
+}
+
 const AuthForm: React.FC = () => {
   const [email, setEmail] = useState('');
+  const [otp, setOtp] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [step, setStep] = useState<AuthStep>(AuthStep.EMAIL);
   const [error, setError] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
-
+  const [isSignUp, setIsSignUp] = useState(true);
+  
+  // User info for sign up
   const [userInfo, setUserInfo] = useState({
     name: '',
     role: 'candidate' as UserRole,
@@ -21,66 +32,115 @@ const AuthForm: React.FC = () => {
     phone: '',
   });
 
-  const { login, register, isLoading } = useAuthStore();
+  const { 
+    sendOtp, 
+    verifyOtp, 
+    setPassword: setUserPassword, 
+    login,
+    isLoading, 
+    otpSent, 
+    otpVerified, 
+    error: authError,
+  } = useAuthStore();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  // Auto-advance to next step when store updates
+  React.useEffect(() => {
+    if (otpSent && step === AuthStep.EMAIL) {
+      setStep(AuthStep.OTP);
+    }
+    if (otpVerified && step === AuthStep.OTP) {
+      setStep(isSignUp ? AuthStep.USER_INFO : AuthStep.LOGIN);
+    }
+  }, [otpSent, otpVerified, step, isSignUp]);
+
+  React.useEffect(() => {
+    if (authError) {
+      setError(authError);
+    }
+  }, [authError]);
+
+  const handleSubmitEmail = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
-    if (!email || !password) {
-      setError('Please fill in all fields');
+    if (!email) {
+      setError('Email is required');
       return;
     }
-
-    try {
-      await login(email, password);
-    } catch (err: any) {
-      setError(err.message || 'Login failed');
-    }
+    await sendOtp(email);
   };
 
-  const handleSignUp = async (e: React.FormEvent) => {
+  const handleSubmitOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
-    if (!email || !password || !userInfo.name) {
-      setError('Please fill in all required fields');
+    if (!otp) {
+      setError('OTP is required');
       return;
     }
+    await verifyOtp(email, otp);
+  };
 
+  const handleSubmitUserInfo = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    if (!userInfo.name) {
+      setError('Name is required');
+      return;
+    }
+    setStep(AuthStep.PASSWORD);
+  };
+
+  const handleSubmitPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    if (!password) {
+      setError('Password is required');
+      return;
+    }
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
     }
+    
+    const userData = {
+      email: email,
+      phone: userInfo.phone,
+      ...userInfo,
+    };
+    
+    await setUserPassword(email, password, userData);
+  };
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    if (!password) {
+      setError('Password is required');
       return;
     }
-
-    try {
-      await register({
-        email,
-        password,
-        ...userInfo,
-      });
-    } catch (err: any) {
-      setError(err.message || 'Registration failed');
-    }
+    await login(email, password);
   };
 
   const toggleAuthMode = () => {
     setIsSignUp(!isSignUp);
+    setStep(AuthStep.EMAIL);
     setError('');
     setEmail('');
+    setOtp('');
     setPassword('');
     setConfirmPassword('');
     setUserInfo({ name: '', role: 'candidate', department: '', phone: '' });
   };
 
+  const stepVariants = {
+    hidden: { opacity: 0, x: 20 },
+    visible: { opacity: 1, x: 0 },
+    exit: { opacity: 0, x: -20 }
+  };
+
   return (
     <div className="w-full">
-      <motion.div
+      {/* Header */}
+      <motion.div 
         className="text-center mb-8"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -93,22 +153,24 @@ const AuthForm: React.FC = () => {
         >
           {isSignUp ? 'Join Campus Connect' : 'Welcome Back'}
         </GradientText>
-        <p className="text-gray-700 dark:text-gray-300">
+        <p className="text-neutral-600">
           {isSignUp
-            ? 'Create your account to get started'
+            ? 'Create your secure account with email verification'
             : 'Sign in to access your dashboard'}
         </p>
       </motion.div>
 
       <AnimatePresence mode="wait">
-        {!isSignUp ? (
+        {/* Email Step */}
+        {step === AuthStep.EMAIL && (
           <motion.form
-            key="login"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            onSubmit={handleLogin}
-            className="space-y-5"
+            key="email"
+            variants={stepVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            onSubmit={handleSubmitEmail}
+            className="space-y-6"
           >
             <Input
               label="Email Address"
@@ -119,16 +181,6 @@ const AuthForm: React.FC = () => {
               icon={<Mail size={18} />}
               fullWidth
               autoFocus
-            />
-
-            <Input
-              label="Password"
-              type="password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              icon={<Lock size={18} />}
-              fullWidth
               error={error}
             />
 
@@ -136,35 +188,103 @@ const AuthForm: React.FC = () => {
               type="submit"
               fullWidth
               isLoading={isLoading}
-              className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 shadow-lg"
+              className="bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 shadow-lg"
               icon={<ArrowRight size={18} />}
               iconPosition="right"
             >
-              Sign In
+              Send Verification Code
             </Button>
 
             <div className="text-center text-sm">
-              <span className="text-gray-600 dark:text-gray-400">
-                Don't have an account?
+              <span className="text-neutral-600">
+                {isSignUp ? 'Already have an account?' : "Don't have an account?"}
               </span>
               <button
                 type="button"
-                className="ml-1 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium transition-colors"
+                className="ml-1 text-primary-600 hover:text-primary-700 font-medium transition-colors"
                 onClick={toggleAuthMode}
               >
-                Sign Up
+                {isSignUp ? 'Sign In' : 'Sign Up'}
               </button>
             </div>
           </motion.form>
-        ) : (
+        )}
+
+        {/* OTP Step */}
+        {step === AuthStep.OTP && (
           <motion.form
-            key="signup"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            onSubmit={handleSignUp}
-            className="space-y-4"
+            key="otp"
+            variants={stepVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            onSubmit={handleSubmitOtp}
+            className="space-y-6"
           >
+            <div className="text-center mb-6">
+              <motion.div 
+                className="w-16 h-16 bg-gradient-to-br from-primary-100 to-secondary-100 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg"
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                <Mail className="w-8 h-8 text-primary-600" />
+              </motion.div>
+              <p className="text-neutral-600">
+                We've sent a verification code to{' '}
+                <span className="font-semibold text-primary-700">{email}</span>
+              </p>
+            </div>
+
+            <Input
+              label="Verification Code"
+              type="text"
+              placeholder="Enter 6-digit code"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              fullWidth
+              autoFocus
+              error={error}
+              className="text-center text-lg tracking-widest"
+              maxLength={6}
+            />
+
+            <Button
+              type="submit"
+              fullWidth
+              isLoading={isLoading}
+              className="bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 shadow-lg"
+            >
+              Verify Code
+            </Button>
+
+            <div className="text-center space-y-2">
+              <button
+                type="button"
+                className="text-sm text-primary-600 hover:text-primary-700 transition-colors"
+                onClick={() => setStep(AuthStep.EMAIL)}
+              >
+                Change email address
+              </button>
+            </div>
+          </motion.form>
+        )}
+
+        {/* User Info Step (Sign Up Only) */}
+        {step === AuthStep.USER_INFO && (
+          <motion.form
+            key="userinfo"
+            variants={stepVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            onSubmit={handleSubmitUserInfo}
+            className="space-y-6"
+          >
+            <div className="text-center mb-6">
+              <h3 className="text-lg font-semibold text-neutral-800">Tell us about yourself</h3>
+              <p className="text-sm text-neutral-600">Help us personalize your experience</p>
+            </div>
+
             <Input
               label="Full Name"
               type="text"
@@ -176,24 +296,14 @@ const AuthForm: React.FC = () => {
               autoFocus
             />
 
-            <Input
-              label="Email Address"
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              icon={<Mail size={18} />}
-              fullWidth
-            />
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
                 Role
               </label>
               <select
                 value={userInfo.role}
                 onChange={(e) => setUserInfo({ ...userInfo, role: e.target.value as UserRole })}
-                className="w-full px-3 py-2.5 bg-white dark:bg-secondary-800 border border-gray-300 dark:border-secondary-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 shadow-sm text-gray-900 dark:text-gray-100"
+                className="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 shadow-sm"
               >
                 <option value="candidate">Student</option>
                 <option value="faculty">Faculty</option>
@@ -221,14 +331,43 @@ const AuthForm: React.FC = () => {
               fullWidth
             />
 
+            <Button
+              type="submit"
+              fullWidth
+              className="bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 shadow-lg"
+              icon={<ArrowRight size={18} />}
+              iconPosition="right"
+            >
+              Continue
+            </Button>
+          </motion.form>
+        )}
+
+        {/* Password Step (Sign Up) */}
+        {step === AuthStep.PASSWORD && (
+          <motion.form
+            key="password"
+            variants={stepVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            onSubmit={handleSubmitPassword}
+            className="space-y-6"
+          >
+            <div className="text-center mb-6">
+              <h3 className="text-lg font-semibold text-neutral-800">Secure your account</h3>
+              <p className="text-sm text-neutral-600">Create a strong password</p>
+            </div>
+
             <Input
-              label="Password"
+              label="Create Password"
               type="password"
-              placeholder="Create a password"
+              placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               icon={<Lock size={18} />}
               fullWidth
+              autoFocus
             />
 
             <Input
@@ -242,57 +381,82 @@ const AuthForm: React.FC = () => {
               error={error}
             />
 
+            <div className="text-xs text-neutral-500 space-y-1 bg-primary-50 p-3 rounded-lg">
+              <p className="font-medium">Password must contain:</p>
+              <ul className="list-disc list-inside space-y-1 ml-2">
+                <li>At least 8 characters</li>
+                <li>One uppercase letter</li>
+                <li>One lowercase letter</li>
+                <li>One number</li>
+                <li>One special character</li>
+              </ul>
+            </div>
+
             <Button
               type="submit"
               fullWidth
               isLoading={isLoading}
-              className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 shadow-lg"
+              className="bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 shadow-lg"
             >
               Create Account
             </Button>
+          </motion.form>
+        )}
 
-            <div className="text-center text-sm">
-              <span className="text-gray-600 dark:text-gray-400">
-                Already have an account?
-              </span>
-              <button
-                type="button"
-                className="ml-1 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium transition-colors"
-                onClick={toggleAuthMode}
-              >
-                Sign In
-              </button>
-            </div>
+        {/* Login Step */}
+        {step === AuthStep.LOGIN && (
+          <motion.form
+            key="login"
+            variants={stepVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            onSubmit={handleLogin}
+            className="space-y-6"
+          >
+            <Input
+              label="Password"
+              type="password"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              icon={<Lock size={18} />}
+              fullWidth
+              autoFocus
+              error={error}
+            />
+
+            <Button
+              type="submit"
+              fullWidth
+              isLoading={isLoading}
+              className="bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 shadow-lg"
+            >
+              Sign In
+            </Button>
           </motion.form>
         )}
       </AnimatePresence>
 
-      <motion.div
-        className="mt-8 p-4 bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/30 dark:to-primary-800/30 rounded-xl border border-primary-200 dark:border-primary-700/50"
+      {/* Demo Account Access */}
+      <motion.div 
+        className="mt-8 p-4 bg-gradient-to-r from-primary-50 to-secondary-50 rounded-lg border border-primary-200"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
       >
-        <h3 className="text-sm font-semibold text-primary-900 dark:text-primary-100 mb-3">Demo Accounts:</h3>
-        <div className="grid grid-cols-2 gap-3 text-xs">
-          <div className="space-y-1 text-primary-800 dark:text-primary-200">
-            <p className="font-medium">Admin</p>
-            <p className="text-primary-700 dark:text-primary-300">admin@campus.edu</p>
+        <h3 className="text-sm font-medium text-primary-800 mb-2">Demo Accounts:</h3>
+        <div className="grid grid-cols-2 gap-2 text-xs text-primary-700">
+          <div>
+            <p>Admin: admin@campus.edu</p>
+            <p>Coordinator: coordinator@campus.edu</p>
           </div>
-          <div className="space-y-1 text-primary-800 dark:text-primary-200">
-            <p className="font-medium">Coordinator</p>
-            <p className="text-primary-700 dark:text-primary-300">coordinator@campus.edu</p>
-          </div>
-          <div className="space-y-1 text-primary-800 dark:text-primary-200">
-            <p className="font-medium">Faculty</p>
-            <p className="text-primary-700 dark:text-primary-300">faculty@campus.edu</p>
-          </div>
-          <div className="space-y-1 text-primary-800 dark:text-primary-200">
-            <p className="font-medium">Student</p>
-            <p className="text-primary-700 dark:text-primary-300">student@campus.edu</p>
+          <div>
+            <p>Faculty: faculty@campus.edu</p>
+            <p>Student: student@campus.edu</p>
           </div>
         </div>
-        <p className="mt-3 text-xs font-medium text-primary-800 dark:text-primary-200">Password for all: <span className="font-mono bg-primary-200 dark:bg-primary-800 px-2 py-0.5 rounded">password</span></p>
+        <p className="mt-2 text-xs text-primary-600">Password: "password"</p>
       </motion.div>
     </div>
   );
