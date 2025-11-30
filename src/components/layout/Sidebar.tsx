@@ -212,7 +212,7 @@ const Sidebar: React.FC = () => {
 
   return (
     <motion.aside 
-      className="hidden lg:block w-64 bg-white/95 dark:bg-dark-975/98 backdrop-blur-xl border-r border-gray-200/50 dark:border-dark-700/50 min-h-screen shadow-xl dark:shadow-dark-xl"
+      className="hidden lg:block w-64 bg-white/95 dark:bg-dark-950/95 backdrop-blur-xl border-r border-gray-200/50 dark:border-dark-700/40 min-h-screen shadow-xl dark:shadow-dark-xl"
       variants={sidebarVariants}
       initial="hidden"
       animate="visible"

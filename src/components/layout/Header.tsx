@@ -34,7 +34,7 @@ const Header: React.FC = () => {
 
   return (
     <motion.header
-      className="bg-white/95 dark:bg-dark-975/98 backdrop-blur-xl shadow-lg dark:shadow-dark-lg border-b border-gray-200/50 dark:border-dark-700/50 sticky top-0 z-30"
+      className="bg-white/95 dark:bg-dark-950/95 backdrop-blur-xl shadow-lg dark:shadow-dark-lg border-b border-gray-200/50 dark:border-dark-700/40 sticky top-0 z-30"
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ type: "spring", stiffness: 100, damping: 20 }}

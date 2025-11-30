@@ -22,114 +22,77 @@ export default {
           900: '#7f311f',
           950: '#45170d',
         },
-        // Premium DEEP dark theme colors - Much darker
+        // EXACT colors from screenshot - Professional dark charcoal system
         dark: {
-          50: '#F9FAFB',   // Brightest text
-          100: '#F3F4F6',  // Headers
-          200: '#E5E7EB',  // Subheaders
-          300: '#D1D5DB',  // Body text
-          400: '#9CA3AF',  // Muted text
-          500: '#6B7280',  // Borders/dividers
-          600: '#4B5563',  // Hover states
-          700: '#374151',  // Card borders
-          800: '#1F2937',  // Card backgrounds
-          850: '#18202F',  // Elevated surfaces
-          900: '#111827',  // Medium backgrounds
-          925: '#0D1117',  // Deeper background
-          950: '#090B10',  // Deepest backgrounds
-          975: '#040507',  // Pure black variant
+          50: '#F4F4F5',   // Highest contrast text (white-ish)
+          100: '#E5E7EB',  // Headers/titles
+          200: '#D1D5DB',  // Subheaders
+          300: '#9CA3AF',  // Body text (readable gray)
+          400: '#6B7280',  // Muted text
+          500: '#4B5563',  // Borders medium
+          600: '#374151',  // Borders dark
+          700: '#30333A',  // Card borders and dividers
+          750: '#2A2D33',  // Slightly lighter borders
+          800: '#202226',  // Card backgrounds (medium-dark surfaces)
+          850: '#1A1C1F',  // Elevated card surfaces
+          900: '#131416',  // Main background (dark charcoal)
+          950: '#0F0F11',  // Deepest background
         },
-        // Accent colors for dark theme
+        // Premium accent colors - soft neon highlights
         accent: {
           cyan: {
-            50: '#ECFEFF',
             400: '#22D3EE',
             500: '#06B6D4',
             600: '#0891B2',
-            700: '#0E7490',
           },
           green: {
-            50: '#F0FDF4',
             400: '#4ADE80',
             500: '#22C55E',
             600: '#16A34A',
-            700: '#15803D',
           },
           blue: {
-            50: '#EFF6FF',
             400: '#60A5FA',
             500: '#3B82F6',
             600: '#2563EB',
-            700: '#1D4ED8',
           },
           orange: {
-            50: '#FFF7ED',
             400: '#FB923C',
             500: '#F97316',
             600: '#EA580C',
-            700: '#C2410C',
           },
         },
         // High contrast success colors
         success: {
-          50: '#f0fdf5',
-          100: '#dcfce8',
-          200: '#bbf7d1',
-          300: '#86efad',
           400: '#4ade80',
           500: '#22c55e',
           600: '#16a34a',
-          700: '#15803d',
-          800: '#166534',
-          900: '#14532d',
         },
         // Enhanced warning colors
         warning: {
-          50: '#fffbeb',
-          100: '#fef3c7',
-          200: '#fde68a',
-          300: '#fcd34d',
           400: '#fbbf24',
           500: '#f59e0b',
           600: '#d97706',
-          700: '#b45309',
-          800: '#92400e',
-          900: '#78350f',
         },
         // Premium danger/error colors
         danger: {
-          50: '#fef2f2',
-          100: '#fee2e2',
-          200: '#fecaca',
-          300: '#fca5a5',
           400: '#f87171',
           500: '#ef4444',
           600: '#dc2626',
-          700: '#b91c1c',
-          800: '#991b1b',
-          900: '#7f1d1d',
         },
         // Clean info/blue colors
         info: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
           400: '#60a5fa',
           500: '#3b82f6',
           600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
         },
       },
       animation: {
-        'fade-in': 'fadeIn 0.5s ease-in-out',
+        'fade-in': 'fadeIn 0.5s ease-out',
         'fade-in-up': 'fadeInUp 0.6s ease-out',
         'slide-up': 'slideUp 0.4s ease-out',
         'slide-down': 'slideDown 0.4s ease-out',
         'slide-in-right': 'slideInRight 0.4s ease-out',
-        'scale-in': 'scaleIn 0.3s ease-out',
+        'scale-in': 'scaleIn 0.35s ease-out',
         'bounce-subtle': 'bounceSubtle 0.6s ease-out',
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'glow': 'glow 2s ease-in-out infinite alternate',
@@ -166,8 +129,8 @@ export default {
           '50%': { transform: 'translateY(-5px)' },
         },
         glow: {
-          '0%': { boxShadow: '0 0 5px rgba(237, 117, 68, 0.5), 0 0 10px rgba(237, 117, 68, 0.3)' },
-          '100%': { boxShadow: '0 0 20px rgba(237, 117, 68, 0.8), 0 0 30px rgba(237, 117, 68, 0.4)' },
+          '0%': { boxShadow: '0 0 10px rgba(237, 117, 68, 0.5), 0 0 20px rgba(237, 117, 68, 0.3)' },
+          '100%': { boxShadow: '0 0 25px rgba(237, 117, 68, 0.8), 0 0 40px rgba(237, 117, 68, 0.4)' },
         },
         shimmer: {
           '0%': { transform: 'translateX(-100%)' },
@@ -182,13 +145,13 @@ export default {
         xs: '2px',
       },
       boxShadow: {
-        'dark-sm': '0 1px 2px 0 rgba(0, 0, 0, 0.5)',
-        'dark-md': '0 4px 6px -1px rgba(0, 0, 0, 0.6), 0 2px 4px -1px rgba(0, 0, 0, 0.4)',
-        'dark-lg': '0 10px 15px -3px rgba(0, 0, 0, 0.7), 0 4px 6px -2px rgba(0, 0, 0, 0.5)',
-        'dark-xl': '0 20px 25px -5px rgba(0, 0, 0, 0.8), 0 10px 10px -5px rgba(0, 0, 0, 0.5)',
-        'glow-primary': '0 0 30px rgba(237, 117, 68, 0.4), 0 0 60px rgba(237, 117, 68, 0.2)',
-        'glow-cyan': '0 0 30px rgba(34, 211, 238, 0.4), 0 0 60px rgba(34, 211, 238, 0.2)',
-        'glow-green': '0 0 30px rgba(74, 222, 128, 0.4), 0 0 60px rgba(74, 222, 128, 0.2)',
+        'dark-sm': '0 1px 3px 0 rgba(0, 0, 0, 0.4)',
+        'dark-md': '0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.3)',
+        'dark-lg': '0 10px 15px -3px rgba(0, 0, 0, 0.6), 0 4px 6px -4px rgba(0, 0, 0, 0.4)',
+        'dark-xl': '0 20px 25px -5px rgba(0, 0, 0, 0.7), 0 8px 10px -6px rgba(0, 0, 0, 0.4)',
+        'glow-primary': '0 0 20px rgba(237, 117, 68, 0.35), 0 0 40px rgba(237, 117, 68, 0.15)',
+        'glow-cyan': '0 0 20px rgba(34, 211, 238, 0.35), 0 0 40px rgba(34, 211, 238, 0.15)',
+        'glow-green': '0 0 20px rgba(74, 222, 128, 0.35), 0 0 40px rgba(74, 222, 128, 0.15)',
       },
     },
   },

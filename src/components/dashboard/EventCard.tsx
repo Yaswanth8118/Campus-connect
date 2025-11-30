@@ -18,9 +18,9 @@ const EventCard: React.FC<EventCardProps> = ({ event, onClick }) => {
       hoverable
       onClick={onClick}
     >
-      <CardBody className="space-y-4">
+      <CardBody className="space-y-5">
         <div className="flex justify-between items-start gap-3">
-          <h3 className="font-bold text-xl text-gray-900 dark:text-dark-50 line-clamp-1 flex-1 tracking-tight">
+          <h3 className="font-bold text-xl text-gray-900 dark:text-dark-50 line-clamp-1 flex-1 tracking-tight leading-tight">
             {event.title}
           </h3>
           {isLive ? (
@@ -34,17 +34,17 @@ const EventCard: React.FC<EventCardProps> = ({ event, onClick }) => {
           )}
         </div>
 
-        <p className="text-gray-600 dark:text-dark-300 text-sm leading-relaxed line-clamp-2 min-h-[2.5rem]">
+        <p className="text-gray-600 dark:text-dark-200 text-sm leading-relaxed line-clamp-2 min-h-[2.75rem]">
           {event.description}
         </p>
 
-        <div className="flex items-center gap-4 pt-2 border-t border-gray-200/50 dark:border-dark-700/50 text-sm font-medium">
-          <div className="flex items-center gap-2 text-gray-500 dark:text-dark-400">
-            <Calendar size={16} className="text-primary-500 dark:text-primary-400" />
+        <div className="flex items-center gap-5 pt-3 border-t border-gray-200/60 dark:border-dark-700/50 text-sm font-medium">
+          <div className="flex items-center gap-2 text-gray-600 dark:text-dark-300">
+            <Calendar size={18} className="text-primary-500 dark:text-primary-400" />
             <span>{formatDate(event.startTime)}</span>
           </div>
-          <div className="flex items-center gap-2 text-gray-500 dark:text-dark-400">
-            <Clock size={16} className="text-primary-500 dark:text-primary-400" />
+          <div className="flex items-center gap-2 text-gray-600 dark:text-dark-300">
+            <Clock size={18} className="text-primary-500 dark:text-primary-400" />
             <span>{formatTime(event.startTime)}</span>
           </div>
         </div>

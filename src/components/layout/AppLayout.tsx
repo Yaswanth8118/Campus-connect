@@ -20,7 +20,7 @@ const AppLayout: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-black">
+    <div className="min-h-screen bg-gray-50 dark:bg-dark-900">
       <Header />
       <div className="flex">
         <Sidebar />
