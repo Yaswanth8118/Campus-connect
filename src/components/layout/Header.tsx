@@ -63,7 +63,7 @@ const Header: React.FC = () => {
               onClick={() => navigate('/dashboard')}
             >
               <img
-                src="/campus%20connect.png"
+                src="/campusconnect.png"
                 alt="Campus Connect"
                 className="w-10 h-10 mr-3 drop-shadow-lg"
               />
