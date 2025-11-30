@@ -171,13 +171,6 @@ const Sidebar: React.FC = () => {
         label: 'Assignments',
         roles: ['candidate'],
         onClick: () => navigate('/assignments')
-      },
-      {
-        to: '/attendance',
-        icon: UserCheck,
-        label: 'Attendance',
-        roles: ['candidate'],
-        onClick: () => navigate('/attendance')
       }
     ];
 
@@ -245,7 +238,7 @@ const Sidebar: React.FC = () => {
               custom={index}
             >
               {/* Check if it's a working route */}
-              {['/dashboard', '/rooms', '/events', '/departments', '/reports', '/assignments', '/grades', '/attendance'].includes(item.to) ? (
+              {['/dashboard', '/rooms', '/events', '/departments', '/reports', '/assignments', '/grades'].includes(item.to) ? (
                 <NavLink
                   to={item.to}
                   className={({ isActive }) =>

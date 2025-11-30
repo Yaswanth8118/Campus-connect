@@ -62,13 +62,13 @@ const Header: React.FC = () => {
               transition={{ type: "spring", stiffness: 400, damping: 10 }}
               onClick={() => navigate('/dashboard')}
             >
-              <img
-                src="/campus-connect-logo.png"
-                alt="Campus Connect"
+              <img 
+                src="/campus connect.png" 
+                alt="Campus Connect" 
                 className="w-10 h-10 mr-3 drop-shadow-lg"
               />
               <GradientText
-                colors={["#3b82f6", "#60a5fa", "#2563eb", "#1d4ed8"]}
+                colors={["#e67544", "#f19967", "#de5a2f", "#b84628"]}
                 animationSpeed={4}
                 className="text-2xl font-bold"
               >
