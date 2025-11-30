@@ -127,14 +127,11 @@ const Sidebar: React.FC = () => {
         }
       },
       {
-        to: '/attendance',
+        to: '/attendance/manage',
         icon: UserCheck,
-        label: 'Attendance',
-        roles: ['faculty'],
-        onClick: () => {
-          toast.success('Attendance Tracker - Coming Soon!');
-          // navigate('/attendance');
-        }
+        label: 'Manage Attendance',
+        roles: ['faculty', 'coordinator'],
+        onClick: () => navigate('/attendance/manage')
       },
       {
         to: '/grades',
@@ -171,6 +168,13 @@ const Sidebar: React.FC = () => {
         label: 'Assignments',
         roles: ['candidate'],
         onClick: () => navigate('/assignments')
+      },
+      {
+        to: '/attendance',
+        icon: UserCheck,
+        label: 'My Attendance',
+        roles: ['candidate'],
+        onClick: () => navigate('/attendance')
       }
     ];
 
@@ -208,7 +212,7 @@ const Sidebar: React.FC = () => {
 
   return (
     <motion.aside 
-      className="hidden lg:block w-64 bg-white/95 dark:bg-secondary-900/95 backdrop-blur-xl border-r border-primary-200/50 dark:border-secondary-700/50 min-h-screen shadow-lg"
+      className="hidden lg:block w-64 bg-white/95 dark:bg-dark-975/98 backdrop-blur-xl border-r border-gray-200/50 dark:border-dark-700/50 min-h-screen shadow-xl dark:shadow-dark-xl"
       variants={sidebarVariants}
       initial="hidden"
       animate="visible"
@@ -238,14 +242,14 @@ const Sidebar: React.FC = () => {
               custom={index}
             >
               {/* Check if it's a working route */}
-              {['/dashboard', '/rooms', '/events', '/departments', '/reports', '/assignments', '/grades'].includes(item.to) ? (
+              {['/dashboard', '/rooms', '/events', '/departments', '/reports', '/assignments', '/grades', '/attendance', '/attendance/manage'].includes(item.to) ? (
                 <NavLink
                   to={item.to}
                   className={({ isActive }) =>
                     `group flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${
                       isActive
-                        ? 'bg-gradient-to-r from-primary-500 to-accent-500 text-white shadow-lg transform scale-105'
-                        : 'text-gray-600 dark:text-gray-300 hover:bg-gradient-to-r hover:from-primary-50 hover:to-accent-50 dark:hover:from-primary-900/20 dark:hover:to-accent-900/20 hover:text-primary-700 dark:hover:text-primary-300 hover:shadow-md'
+                        ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg dark:shadow-glow-primary transform scale-[1.02]'
+                        : 'text-gray-700 dark:text-dark-200 hover:bg-gray-100 dark:hover:bg-dark-800/80 hover:text-primary-600 dark:hover:text-primary-400 hover:shadow-sm'
                     }`
                   }
                 >
@@ -253,7 +257,7 @@ const Sidebar: React.FC = () => {
                     <>
                       <item.icon 
                         className={`mr-3 h-5 w-5 transition-all duration-300 ${
-                          isActive ? 'text-white scale-110' : 'text-gray-400 dark:text-gray-500 group-hover:text-primary-600 dark:group-hover:text-primary-400 group-hover:scale-110'
+                          isActive ? 'text-white scale-110' : 'text-gray-500 dark:text-dark-400 group-hover:text-primary-600 dark:group-hover:text-primary-400 group-hover:scale-110'
                         }`} 
                       />
                       {item.label}
@@ -270,11 +274,11 @@ const Sidebar: React.FC = () => {
               ) : (
                 <motion.button
                   onClick={(e) => handleItemClick(item, e)}
-                  className="w-full group flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 text-gray-600 dark:text-gray-300 hover:bg-gradient-to-r hover:from-primary-50 hover:to-accent-50 dark:hover:from-primary-900/20 dark:hover:to-accent-900/20 hover:text-primary-700 dark:hover:text-primary-300 hover:shadow-md"
+                  className="w-full group flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 text-gray-700 dark:text-dark-200 hover:bg-gray-100 dark:hover:bg-dark-800/80 hover:text-primary-600 dark:hover:text-primary-400 hover:shadow-sm"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <item.icon className="mr-3 h-5 w-5 text-gray-400 dark:text-gray-500 group-hover:text-primary-600 dark:group-hover:text-primary-400 group-hover:scale-110 transition-all duration-300" />
+                  <item.icon className="mr-3 h-5 w-5 text-gray-500 dark:text-dark-400 group-hover:text-primary-600 dark:group-hover:text-primary-400 group-hover:scale-110 transition-all duration-300" />
                   {item.label}
                   <motion.div
                     className="ml-auto text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
@@ -291,7 +295,7 @@ const Sidebar: React.FC = () => {
 
         {/* Settings */}
         <motion.div
-          className="px-2 mt-6 pt-6 border-t border-primary-200 dark:border-secondary-700"
+          className="px-2 mt-6 pt-6 border-t border-gray-200 dark:border-dark-700/80"
           variants={itemVariants}
         >
           <NavLink

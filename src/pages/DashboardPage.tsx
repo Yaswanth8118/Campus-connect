@@ -45,8 +45,8 @@ const DashboardPage: React.FC = () => {
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
-          <p className="text-gray-600">Welcome back, {user?.name}</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-dark-50 tracking-tight">Dashboard</h1>
+          <p className="text-gray-600 dark:text-dark-300 text-lg">Welcome back, {user?.name}</p>
         </div>
         <div className="mt-4 md:mt-0">
           <Badge variant="primary" size="md" className="mr-2">
@@ -62,7 +62,7 @@ const DashboardPage: React.FC = () => {
       <section>
         <div className="flex items-center mb-4">
           <Bell className="h-5 w-5 text-red-500 mr-2" />
-          <h2 className="text-xl font-semibold text-gray-800">Live Now</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-dark-100 tracking-tight">Live Now</h2>
         </div>
         
         {liveEvents.length > 0 ? (
@@ -97,7 +97,7 @@ const DashboardPage: React.FC = () => {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <MessageSquare className="h-5 w-5 text-blue-800 mr-2" />
-              <h2 className="text-xl font-semibold text-gray-800">Your Rooms</h2>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-dark-100 tracking-tight">Your Rooms</h2>
             </div>
             <button
               onClick={() => navigate('/rooms')}
@@ -137,7 +137,7 @@ const DashboardPage: React.FC = () => {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center">
               <Calendar className="h-5 w-5 text-teal-600 mr-2" />
-              <h2 className="text-xl font-semibold text-gray-800">Upcoming Events</h2>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-dark-100 tracking-tight">Upcoming Events</h2>
             </div>
             <button
               onClick={() => navigate('/events')}

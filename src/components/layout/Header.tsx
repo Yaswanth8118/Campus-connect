@@ -33,8 +33,8 @@ const Header: React.FC = () => {
   const unreadCount = mockNotifications.filter(n => n.unread).length;
 
   return (
-    <motion.header 
-      className="bg-white/90 dark:bg-secondary-900/90 backdrop-blur-xl shadow-lg border-b border-primary-200/50 dark:border-secondary-700/50 sticky top-0 z-30"
+    <motion.header
+      className="bg-white/95 dark:bg-dark-975/98 backdrop-blur-xl shadow-lg dark:shadow-dark-lg border-b border-gray-200/50 dark:border-dark-700/50 sticky top-0 z-30"
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ type: "spring", stiffness: 100, damping: 20 }}
@@ -62,10 +62,10 @@ const Header: React.FC = () => {
               transition={{ type: "spring", stiffness: 400, damping: 10 }}
               onClick={() => navigate('/dashboard')}
             >
-              <img 
-                src="/campus connect.png" 
-                alt="Campus Connect" 
-                className="w-10 h-10 mr-3 drop-shadow-lg"
+              <img
+                src="/campusconnect.png"
+                alt="Campus Connect"
+                className="w-10 h-10 mr-3 object-contain drop-shadow-xl"
               />
               <GradientText
                 colors={["#e67544", "#f19967", "#de5a2f", "#b84628"]}
