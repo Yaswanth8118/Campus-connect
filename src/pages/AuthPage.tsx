@@ -165,7 +165,7 @@ const AuthPage: React.FC = () => {
                   animationSpeed={4}
                   className="text-4xl lg:text-6xl font-bold block"
                 >
-                  Campus Connect
+                  Campus Conect
                 </GradientText>
                 <motion.p 
                   className="text-primary-300 dark:text-primary-200 text-lg font-medium mt-2"
