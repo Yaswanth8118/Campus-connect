@@ -95,20 +95,14 @@ const Sidebar: React.FC = () => {
         icon: Building,
         label: 'Departments',
         roles: ['admin', 'coordinator'],
-        onClick: () => {
-          toast.success('Department Management - Coming Soon!');
-          // navigate('/departments');
-        }
+        onClick: () => navigate('/departments')
       },
       {
         to: '/reports',
         icon: FileText,
         label: 'Reports',
         roles: ['admin', 'coordinator'],
-        onClick: () => {
-          toast.success('Reports Dashboard - Coming Soon!');
-          // navigate('/reports');
-        }
+        onClick: () => navigate('/reports')
       },
       {
         to: '/notifications',
@@ -165,24 +159,18 @@ const Sidebar: React.FC = () => {
         }
       },
       {
-        to: '/student-grades',
+        to: '/grades',
         icon: TrendingUp,
         label: 'My Grades',
         roles: ['candidate'],
-        onClick: () => {
-          toast.success('Grade Portal - Coming Soon!');
-          // navigate('/student-grades');
-        }
+        onClick: () => navigate('/grades')
       },
       {
         to: '/assignments',
         icon: FileText,
         label: 'Assignments',
         roles: ['candidate'],
-        onClick: () => {
-          toast.success('Assignment Portal - Coming Soon!');
-          // navigate('/assignments');
-        }
+        onClick: () => navigate('/assignments')
       }
     ];
 
@@ -250,7 +238,7 @@ const Sidebar: React.FC = () => {
               custom={index}
             >
               {/* Check if it's a working route */}
-              {['/dashboard', '/rooms', '/events'].includes(item.to) ? (
+              {['/dashboard', '/rooms', '/events', '/departments', '/reports', '/assignments', '/grades'].includes(item.to) ? (
                 <NavLink
                   to={item.to}
                   className={({ isActive }) =>
@@ -302,29 +290,38 @@ const Sidebar: React.FC = () => {
         </nav>
 
         {/* Settings */}
-        <motion.div 
+        <motion.div
           className="px-2 mt-6 pt-6 border-t border-primary-200 dark:border-secondary-700"
           variants={itemVariants}
         >
-          <motion.button
-            onClick={() => {
-              toast.success('Settings Panel - Coming Soon!');
-              // navigate('/settings');
-            }}
-            className="w-full group flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 text-gray-600 dark:text-gray-300 hover:bg-gradient-to-r hover:from-primary-50 hover:to-accent-50 dark:hover:from-primary-900/20 dark:hover:to-accent-900/20 hover:text-primary-700 dark:hover:text-primary-300 hover:shadow-md"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+          <NavLink
+            to="/settings"
+            className={({ isActive }) =>
+              `group flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-300 ${
+                isActive
+                  ? 'bg-gradient-to-r from-primary-500 to-accent-500 text-white shadow-lg transform scale-105'
+                  : 'text-gray-600 dark:text-gray-300 hover:bg-gradient-to-r hover:from-primary-50 hover:to-accent-50 dark:hover:from-primary-900/20 dark:hover:to-accent-900/20 hover:text-primary-700 dark:hover:text-primary-300 hover:shadow-md'
+              }`
+            }
           >
-            <Settings className="mr-3 h-5 w-5 text-gray-400 dark:text-gray-500 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors" />
-            Settings
-            <motion.div
-              className="ml-auto text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-              initial={{ scale: 0 }}
-              whileHover={{ scale: 1 }}
-            >
-              Soon
-            </motion.div>
-          </motion.button>
+            {({ isActive }) => (
+              <>
+                <Settings
+                  className={`mr-3 h-5 w-5 transition-all duration-300 ${
+                    isActive ? 'text-white scale-110' : 'text-gray-400 dark:text-gray-500 group-hover:text-primary-600 dark:group-hover:text-primary-400 group-hover:scale-110'
+                  }`}
+                />
+                Settings
+                {isActive && (
+                  <motion.div
+                    className="ml-auto w-2 h-2 bg-white rounded-full shadow-lg"
+                    layoutId="activeIndicator"
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  />
+                )}
+              </>
+            )}
+          </NavLink>
         </motion.div>
       </div>
     </motion.aside>

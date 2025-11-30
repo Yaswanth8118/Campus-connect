@@ -75,3 +75,45 @@ export interface RolePermissions {
   faculty: Permission[];
   candidate: Permission[];
 }
+
+export interface Department {
+  id: string;
+  name: string;
+  head_of_department: string;
+  description: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Assignment {
+  id: string;
+  title: string;
+  description: string;
+  due_date: string;
+  department_id: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Submission {
+  id: string;
+  assignment_id: string;
+  student_id: string;
+  file_url: string;
+  submission_text: string;
+  status: 'pending' | 'submitted' | 'graded';
+  submitted_at: string;
+  created_at: string;
+}
+
+export interface Grade {
+  id: string;
+  student_id: string;
+  subject: string;
+  score: number;
+  max_score: number;
+  grade_letter: string;
+  semester: string;
+  created_at: string;
+}
