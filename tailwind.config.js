@@ -8,20 +8,21 @@ export default {
         sans: ['Inter', 'sans-serif'],
       },
       colors: {
-        // Logo-inspired color palette (Rose Gold & Dark Navy)
+        // Premium primary color palette (Rose Gold/Copper)
         primary: {
-          50: '#fdf7f0',
-          100: '#fceee0',
-          200: '#f8d5bf',
-          300: '#f2b894',
-          400: '#eb9567',
-          500: '#e67544', // Main rose gold
-          600: '#d85d2f',
-          700: '#b44a28',
-          800: '#903d26',
-          900: '#753422',
-          950: '#3f1a10',
+          50: '#fef7f3',
+          100: '#fdeee5',
+          200: '#fbd9c9',
+          300: '#f8bfa7',
+          400: '#f39b75',
+          500: '#ed7544', // Main copper-orange
+          600: '#e05a2b',
+          700: '#c14622',
+          800: '#9d3a21',
+          900: '#7f311f',
+          950: '#45170d',
         },
+        // Enhanced dark mode secondary colors for better readability
         secondary: {
           50: '#f8fafc',
           100: '#f1f5f9',
@@ -30,30 +31,31 @@ export default {
           400: '#94a3b8',
           500: '#64748b',
           600: '#475569',
-          700: '#334155',
-          800: '#1e293b', // Dark navy
-          900: '#0f172a',
-          950: '#020617',
+          700: '#3347  55',
+          800: '#252d3d', // Lighter than before for better contrast
+          900: '#1a202e', // Much lighter dark background
+          950: '#0f1419', // Darkest, but still readable
         },
+        // Warm accent colors
         accent: {
-          50: '#fef7f0',
-          100: '#fdeee0',
-          200: '#fad9bf',
-          300: '#f6be94',
-          400: '#f19967',
-          500: '#ed7544', // Warm orange
-          600: '#de5a2f',
-          700: '#b84628',
-          800: '#933a26',
-          900: '#773222',
-          950: '#401810',
+          50: '#fef6f3',
+          100: '#fceee5',
+          200: '#f9d9c9',
+          300: '#f5bea8',
+          400: '#f09976',
+          500: '#ea7449',
+          600: '#dc5632',
+          700: '#b84527',
+          800: '#953926',
+          900: '#793222',
+          950: '#41180f',
         },
-        // Enhanced semantic colors
+        // High contrast success colors
         success: {
-          50: '#f0fdf4',
-          100: '#dcfce7',
-          200: '#bbf7d0',
-          300: '#86efac',
+          50: '#f0fdf5',
+          100: '#dcfce8',
+          200: '#bbf7d1',
+          300: '#86efad',
           400: '#4ade80',
           500: '#22c55e',
           600: '#16a34a',
@@ -62,6 +64,7 @@ export default {
           900: '#14532d',
           950: '#052e16',
         },
+        // Enhanced warning colors
         warning: {
           50: '#fffbeb',
           100: '#fef3c7',
@@ -75,6 +78,7 @@ export default {
           900: '#78350f',
           950: '#451a03',
         },
+        // Premium danger/error colors
         danger: {
           50: '#fef2f2',
           100: '#fee2e2',
@@ -88,6 +92,7 @@ export default {
           900: '#7f1d1d',
           950: '#450a0a',
         },
+        // Clean info/blue colors
         info: {
           50: '#eff6ff',
           100: '#dbeafe',
@@ -161,7 +166,7 @@ export default {
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
-        'gradient-animated': 'linear-gradient(-45deg, #e67544, #f19967, #de5a2f, #b84628)',
+        'gradient-animated': 'linear-gradient(-45deg, #ed7544, #f39b75, #e05a2b, #c14622)',
       },
       backgroundSize: {
         '400%': '400% 400%',
