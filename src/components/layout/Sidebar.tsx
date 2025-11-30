@@ -127,14 +127,11 @@ const Sidebar: React.FC = () => {
         }
       },
       {
-        to: '/attendance',
+        to: '/attendance/manage',
         icon: UserCheck,
-        label: 'Attendance',
-        roles: ['faculty'],
-        onClick: () => {
-          toast.success('Attendance Tracker - Coming Soon!');
-          // navigate('/attendance');
-        }
+        label: 'Manage Attendance',
+        roles: ['faculty', 'coordinator'],
+        onClick: () => navigate('/attendance/manage')
       },
       {
         to: '/grades',
@@ -245,7 +242,7 @@ const Sidebar: React.FC = () => {
               custom={index}
             >
               {/* Check if it's a working route */}
-              {['/dashboard', '/rooms', '/events', '/departments', '/reports', '/assignments', '/grades', '/attendance'].includes(item.to) ? (
+              {['/dashboard', '/rooms', '/events', '/departments', '/reports', '/assignments', '/grades', '/attendance', '/attendance/manage'].includes(item.to) ? (
                 <NavLink
                   to={item.to}
                   className={({ isActive }) =>
