@@ -13,6 +13,7 @@ import { DepartmentsPage } from './pages/DepartmentsPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { AssignmentsPage } from './pages/AssignmentsPage';
 import { GradesPage } from './pages/GradesPage';
+import { AttendancePage } from './pages/AttendancePage';
 import { SettingsPage } from './pages/SettingsPage';
 
 // Layout
@@ -43,6 +44,7 @@ function App() {
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/assignments" element={<AssignmentsPage />} />
             <Route path="/grades" element={<GradesPage />} />
+            <Route path="/attendance" element={<AttendancePage />} />
 
             {/* Settings */}
             <Route path="/settings" element={<SettingsPage />} />

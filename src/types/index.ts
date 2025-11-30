@@ -117,3 +117,15 @@ export interface Grade {
   semester: string;
   created_at: string;
 }
+
+export interface AttendanceRecord {
+  id: string;
+  student_id: string;
+  course_name: string;
+  date: string;
+  status: 'present' | 'absent' | 'late' | 'excused';
+  marked_by: string | null;
+  notes: string;
+  created_at: string;
+  updated_at: string;
+}

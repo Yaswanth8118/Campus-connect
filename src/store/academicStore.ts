@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Department, Assignment, Submission, Grade } from '../types';
+import { Department, Assignment, Submission, Grade, AttendanceRecord } from '../types';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -9,6 +9,7 @@ interface AcademicState {
   assignments: Assignment[];
   submissions: Submission[];
   grades: Grade[];
+  attendanceRecords: AttendanceRecord[];
   isLoading: boolean;
   error: string | null;
 
@@ -27,6 +28,9 @@ interface AcademicState {
 
   fetchGrades: (studentId: string) => Promise<void>;
   createGrade: (grade: Omit<Grade, 'id' | 'created_at'>) => Promise<void>;
+
+  fetchAttendance: (studentId: string) => Promise<void>;
+  createAttendance: (attendance: Omit<AttendanceRecord, 'id' | 'created_at' | 'updated_at'>) => Promise<void>;
 }
 
 const getAuthHeaders = () => {
@@ -43,6 +47,7 @@ export const useAcademicStore = create<AcademicState>((set) => ({
   assignments: [],
   submissions: [],
   grades: [],
+  attendanceRecords: [],
   isLoading: false,
   error: null,
 
@@ -257,6 +262,41 @@ export const useAcademicStore = create<AcademicState>((set) => ({
       const data = await response.json();
       set((state) => ({
         grades: [...state.grades, data[0]],
+        isLoading: false
+      }));
+    } catch (error) {
+      set({ error: (error as Error).message, isLoading: false });
+    }
+  },
+
+  fetchAttendance: async (studentId) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/attendance_records?student_id=eq.${studentId}&select=*&order=date.desc`, {
+        headers: getAuthHeaders(),
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch attendance');
+      const data = await response.json();
+      set({ attendanceRecords: data, isLoading: false });
+    } catch (error) {
+      set({ error: (error as Error).message, isLoading: false });
+    }
+  },
+
+  createAttendance: async (attendance) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/attendance_records`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(attendance),
+      });
+
+      if (!response.ok) throw new Error('Failed to create attendance');
+      const data = await response.json();
+      set((state) => ({
+        attendanceRecords: [...state.attendanceRecords, data[0]],
         isLoading: false
       }));
     } catch (error) {
