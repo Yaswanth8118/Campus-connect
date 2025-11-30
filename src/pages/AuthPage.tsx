@@ -149,7 +149,7 @@ const AuthPage: React.FC = () => {
                 transition={{ type: "spring", stiffness: 400, damping: 10 }}
               >
                 <img 
-                  src="/campusconnect.png" 
+                  src="/campus-connect.png" 
                   alt="Campus Connect Logo" 
                   className="w-full h-full object-contain drop-shadow-2xl"
                 />
