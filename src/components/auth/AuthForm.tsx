@@ -32,16 +32,15 @@ const AuthForm: React.FC = () => {
     phone: '',
   });
 
-  const {
-    sendOtp,
-    verifyOtp,
-    setPassword: setUserPassword,
+  const { 
+    sendOtp, 
+    verifyOtp, 
+    setPassword: setUserPassword, 
     login,
-    isLoading,
-    otpSent,
-    otpVerified,
+    isLoading, 
+    otpSent, 
+    otpVerified, 
     error: authError,
-    resetAuth,
   } = useAuthStore();
 
   // Auto-advance to next step when store updates
@@ -130,7 +129,6 @@ const AuthForm: React.FC = () => {
     setPassword('');
     setConfirmPassword('');
     setUserInfo({ name: '', role: 'candidate', department: '', phone: '' });
-    resetAuth();
   };
 
   const stepVariants = {
@@ -440,19 +438,26 @@ const AuthForm: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {!isSignUp && (
-        <motion.div
-          className="mt-8 p-4 bg-gradient-to-r from-primary-50 to-secondary-50 rounded-lg border border-primary-200"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <h3 className="text-sm font-medium text-primary-800 mb-2">Getting Started:</h3>
-          <p className="text-xs text-primary-700">
-            Don't have an account yet? Click "Sign Up" above to create your Campus Connect account.
-          </p>
-        </motion.div>
-      )}
+      {/* Demo Account Access */}
+      <motion.div 
+        className="mt-8 p-4 bg-gradient-to-r from-primary-50 to-secondary-50 rounded-lg border border-primary-200"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+      >
+        <h3 className="text-sm font-medium text-primary-800 mb-2">Demo Accounts:</h3>
+        <div className="grid grid-cols-2 gap-2 text-xs text-primary-700">
+          <div>
+            <p>Admin: admin@campus.edu</p>
+            <p>Coordinator: coordinator@campus.edu</p>
+          </div>
+          <div>
+            <p>Faculty: faculty@campus.edu</p>
+            <p>Student: student@campus.edu</p>
+          </div>
+        </div>
+        <p className="mt-2 text-xs text-primary-600">Password: "password"</p>
+      </motion.div>
     </div>
   );
 };
