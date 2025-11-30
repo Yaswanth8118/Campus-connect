@@ -204,7 +204,7 @@ export function GradesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-secondary-950 dark:via-secondary-900 dark:to-secondary-950 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-50 to-white dark:from-slate-900 dark:via-slate-850 dark:to-slate-900 p-6">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div>

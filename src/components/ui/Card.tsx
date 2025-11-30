@@ -20,8 +20,8 @@ const Card: React.FC<CardProps> = ({
   animated = true,
 }) => {
   const baseClasses = glass
-    ? 'bg-white/80 dark:bg-secondary-900/80 backdrop-blur-xl border border-white/20 dark:border-secondary-700/50 shadow-lg'
-    : 'bg-white dark:bg-secondary-900 border border-gray-200 dark:border-secondary-700 shadow-sm';
+    ? 'bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl border border-gray-200/50 dark:border-slate-700/70 shadow-lg dark:shadow-slate-900/50'
+    : 'bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow-sm';
 
   const Component = animated ? motion.div : 'div';
   const animationProps = animated
@@ -37,7 +37,7 @@ const Card: React.FC<CardProps> = ({
       className={cn(
         baseClasses,
         'rounded-xl overflow-hidden',
-        hoverable && 'transition-all duration-300 hover:shadow-xl hover:scale-[1.02] cursor-pointer hover:border-primary-300 dark:hover:border-primary-700',
+        hoverable && 'transition-all duration-300 hover:shadow-xl hover:scale-[1.02] cursor-pointer hover:border-primary-400 dark:hover:border-primary-500/70 dark:hover:bg-slate-750',
         className
       )}
       onClick={onClick}
@@ -55,7 +55,7 @@ interface CardHeaderProps {
 
 const CardHeader: React.FC<CardHeaderProps> = ({ children, className }) => {
   return (
-    <div className={cn('px-6 py-4 border-b border-gray-200/50 dark:border-secondary-700/50', className)}>
+    <div className={cn('px-6 py-4 border-b border-gray-200/50 dark:border-slate-700', className)}>
       {children}
     </div>
   );
@@ -78,7 +78,7 @@ interface CardFooterProps {
 const CardFooter: React.FC<CardFooterProps> = ({ children, className }) => {
   return (
     <div
-      className={cn('px-6 py-4 border-t border-gray-200/50 dark:border-secondary-700/50 bg-gray-50/50 dark:bg-secondary-800/50', className)}
+      className={cn('px-6 py-4 border-t border-gray-200/50 dark:border-slate-700 bg-gray-50/50 dark:bg-slate-900/50', className)}
     >
       {children}
     </div>

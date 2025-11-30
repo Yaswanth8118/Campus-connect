@@ -21,7 +21,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, onClick }) => {
     >
       <CardBody>
         <div className="flex justify-between items-start mb-2">
-          <h3 className="font-semibold text-lg text-gray-800 line-clamp-1">
+          <h3 className="font-semibold text-lg text-gray-800 dark:text-gray-100 line-clamp-1">
             {event.title}
           </h3>
           {isLive ? (
@@ -30,12 +30,12 @@ const EventCard: React.FC<EventCardProps> = ({ event, onClick }) => {
             <Badge variant="secondary">Upcoming</Badge>
           )}
         </div>
-        
-        <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+
+        <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-2">
           {event.description}
         </p>
-        
-        <div className="flex items-center text-gray-500 text-sm">
+
+        <div className="flex items-center text-gray-500 dark:text-gray-400 text-sm">
           <Calendar size={14} className="mr-1" />
           <span className="mr-3">{formatDate(event.startTime)}</span>
           <Clock size={14} className="mr-1" />
