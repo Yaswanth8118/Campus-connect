@@ -161,7 +161,7 @@ const AttendancePage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-            <Card className="bg-gradient-to-br from-primary-500 to-primary-600 text-white">
+            <Card className="bg-gradient-to-br from-primary-500 to-primary-600 text-black">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-primary-100 text-sm mb-1">Total Classes</p>
@@ -171,7 +171,7 @@ const AttendancePage: React.FC = () => {
               </div>
             </Card>
 
-            <Card className="bg-gradient-to-br from-success-500 to-success-600 text-white">
+            <Card className="bg-gradient-to-br from-success-500 to-success-600 text-black">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-success-100 text-sm mb-1">Present</p>
@@ -181,7 +181,7 @@ const AttendancePage: React.FC = () => {
               </div>
             </Card>
 
-            <Card className="bg-gradient-to-br from-danger-500 to-danger-600 text-white">
+            <Card className="bg-gradient-to-br from-danger-500 to-danger-600 text-black">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-danger-100 text-sm mb-1">Absent</p>
@@ -191,7 +191,7 @@ const AttendancePage: React.FC = () => {
               </div>
             </Card>
 
-            <Card className="bg-gradient-to-br from-warning-500 to-warning-600 text-white">
+            <Card className="bg-gradient-to-br from-warning-500 to-warning-600 text-black">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-warning-100 text-sm mb-1">Late</p>
