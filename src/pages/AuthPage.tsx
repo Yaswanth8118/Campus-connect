@@ -161,7 +161,7 @@ const AuthPage: React.FC = () => {
               </motion.div>
               <div>
                 <GradientText
-                  colors={["#e67544", "#f19967", "#de5a2f", "#b84628", "#e67544"]}
+                  colors={["#f04e07", "#f19967", "#de5a2f", "#b84628", "#e67544"]}
                   animationSpeed={4}
                   className="text-4xl lg:text-6xl font-bold block"
                 >
