@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
-// Pages
+import LandingPage from './pages/LandingPage';
 import AuthPage from './pages/AuthPage';
 import DashboardPage from './pages/DashboardPage';
 import RoomsPage from './pages/RoomsPage';
@@ -16,8 +16,11 @@ import { GradesPage } from './pages/GradesPage';
 import { SettingsPage } from './pages/SettingsPage';
 import AttendancePage from './pages/AttendancePage';
 import { CoordinatorAttendancePage } from './pages/CoordinatorAttendancePage';
+import { UsersPage } from './pages/UsersPage';
+import { AdminPage } from './pages/AdminPage';
+import { AnalyticsPage } from './pages/AnalyticsPage';
+import { NotificationsPage } from './pages/NotificationsPage';
 
-// Layout
 import AppLayout from './components/layout/AppLayout';
 
 function App() {
@@ -25,22 +28,17 @@ function App() {
     <>
       <Router>
         <Routes>
-          {/* Auth */}
           <Route path="/auth" element={<AuthPage />} />
-          
-          {/* Protected Routes */}
+
           <Route element={<AppLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
 
-            {/* Rooms */}
             <Route path="/rooms" element={<RoomsPage />} />
             <Route path="/rooms/:id" element={<RoomDetailPage />} />
 
-            {/* Events */}
             <Route path="/events" element={<EventsPage />} />
             <Route path="/events/:id" element={<EventDetailPage />} />
 
-            {/* Academic */}
             <Route path="/departments" element={<DepartmentsPage />} />
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/assignments" element={<AssignmentsPage />} />
@@ -48,25 +46,41 @@ function App() {
             <Route path="/attendance" element={<AttendancePage />} />
             <Route path="/attendance/manage" element={<CoordinatorAttendancePage />} />
 
-            {/* Settings */}
+            <Route path="/users" element={<UsersPage />} />
+            <Route path="/admin" element={<AdminPage />} />
+            <Route path="/analytics" element={<AnalyticsPage />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
+
             <Route path="/settings" element={<SettingsPage />} />
 
-            {/* Users */}
-            <Route path="/users" element={<div className="p-8 text-center">Users management page (not implemented in demo)</div>} />
-
-            {/* Admin */}
-            <Route path="/admin" element={<div className="p-8 text-center">Admin dashboard (not implemented in demo)</div>} />
-
-            {/* Default redirect */}
             <Route path="*" element={<Navigate to="/dashboard" />} />
           </Route>
-          
-          {/* Root redirect */}
-          <Route path="/" element={<Navigate to="/dashboard" />} />
+
+          <Route path="/" element={<LandingPage />} />
         </Routes>
       </Router>
-      
-      <Toaster position="top-right" />
+
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 3500,
+          style: {
+            borderRadius: '14px',
+            fontFamily: 'Inter, sans-serif',
+            fontSize: '14px',
+            fontWeight: '500',
+            background: '#fefdfb',
+            color: '#1a1c25',
+            border: '1px solid #f5e9d6',
+          },
+          success: {
+            iconTheme: { primary: '#c92a2a', secondary: '#fff' },
+          },
+          error: {
+            iconTheme: { primary: '#d44545', secondary: '#fff' },
+          },
+        }}
+      />
     </>
   );
 }

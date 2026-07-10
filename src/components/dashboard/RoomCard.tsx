@@ -1,6 +1,6 @@
 import React from 'react';
-import { Users } from 'lucide-react';
-import { Card, CardBody } from '../ui/Card';
+import { Users, ArrowRight, Hash } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { Room } from '../../types';
 import { formatDate } from '../../lib/utils';
 
@@ -11,30 +11,40 @@ interface RoomCardProps {
 
 const RoomCard: React.FC<RoomCardProps> = ({ room, onClick }) => {
   return (
-    <Card
-      hoverable
+    <motion.div
+      className="group relative rounded-2xl overflow-hidden border cursor-pointer bg-white dark:bg-dark-800 border-ink-100 dark:border-dark-700/60 hover:border-primary-200 dark:hover:border-primary-800/50 hover:shadow-card-hover transition-all duration-300"
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35 }}
+      whileHover={{ y: -3 }}
       onClick={onClick}
     >
-      <CardBody className="space-y-5">
-        <h3 className="font-bold text-xl text-gray-900 dark:text-dark-50 line-clamp-1 tracking-tight leading-tight">
-          {room.name}
-        </h3>
+      <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl bg-gradient-to-b from-primary-600 to-accent-500" />
 
-        <p className="text-gray-600 dark:text-dark-200 text-sm leading-relaxed line-clamp-2 min-h-[2.75rem]">
+      <div className="pl-5 pr-5 pt-4 pb-4">
+        <div className="flex items-center gap-2 mb-1.5">
+          <Hash size={14} className="text-primary-400 dark:text-primary-500 flex-shrink-0" />
+          <h3 className="font-heading font-bold text-base text-ink-950 dark:text-dark-50 line-clamp-1 tracking-tight">
+            {room.name}
+          </h3>
+        </div>
+
+        <p className="text-sm text-ink-500 dark:text-dark-400 line-clamp-2 leading-relaxed min-h-[2.5rem] ml-5">
           {room.description}
         </p>
 
-        <div className="flex justify-between items-center pt-3 border-t border-gray-200/60 dark:border-dark-700/50">
-          <div className="flex items-center gap-2 text-gray-600 dark:text-dark-300 text-sm font-medium">
-            <Users size={18} className="text-primary-500 dark:text-primary-400" />
-            <span>{room.members.length} members</span>
+        <div className="flex items-center justify-between mt-3.5 pt-3.5 border-t border-ink-100/80 dark:border-dark-700/50">
+          <div className="flex items-center gap-1.5 text-xs text-ink-500 dark:text-dark-400 font-medium">
+            <Users size={13} className="text-primary-500 dark:text-primary-400" />
+            <span>{room.members.length} member{room.members.length !== 1 ? 's' : ''}</span>
           </div>
-          <span className="text-xs text-gray-500 dark:text-dark-400 font-medium">
-            {formatDate(room.createdAt)}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-ink-400 dark:text-dark-500">{formatDate(room.createdAt)}</span>
+            <ArrowRight size={14} className="text-ink-300 dark:text-dark-600 group-hover:text-primary-500 dark:group-hover:text-primary-400 group-hover:translate-x-0.5 transition-all" />
+          </div>
         </div>
-      </CardBody>
-    </Card>
+      </div>
+    </motion.div>
   );
 };
 

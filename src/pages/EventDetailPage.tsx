@@ -47,13 +47,12 @@ const EventDetailPage: React.FC = () => {
   const canParticipate = eventRoom?.members.includes(user?.id || '') || false;
   
   // Check if user can manage this event
-  const canManageEvent = user?.role === 'admin' || 
-                         user?.role === 'coordinator' || 
-                         (user?.role === 'faculty' && event?.createdBy === user.id);
-  
-  // Check if user can post to the event chat
-  const canPostMessages = canParticipate && 
-                         (user?.role !== 'candidate' || !event?.isLive);
+  const canManageEvent = user?.role === 'admin' ||
+                         user?.role === 'coordinator' ||
+                         (user?.role === 'team_leader' && event?.createdBy === user.id);
+
+  const canPostMessages = canParticipate &&
+                         (user?.role !== 'student' || !event?.isLive);
   
   const handleSendMessage = (content: string, type: 'text' | 'image' | 'video', mediaUrl?: string) => {
     if (!user || !event) return;

@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { User, Phone, Mail, Image, AlertTriangle, LogOut, Save } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { User, Phone, Mail, ImageIcon, AlertTriangle, LogOut, Save, Camera, Shield } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
-import { Card } from '../components/ui/Card';
+import { Card, CardBody, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
+import Avatar from '../components/ui/Avatar';
+import Badge from '../components/ui/Badge';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -23,7 +25,6 @@ export function SettingsPage() {
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-
     toast.success('Profile updated successfully');
   };
 
@@ -32,259 +33,235 @@ export function SettingsPage() {
       toast.error('Please type DELETE to confirm');
       return;
     }
-
     try {
       toast.success('Account deleted successfully');
       logout();
       navigate('/auth');
-    } catch (error) {
+    } catch {
       toast.error('Failed to delete account');
     }
   };
 
+  const roleLabel =
+    user?.role === 'student'
+      ? 'Student'
+      : user?.role === 'team_leader'
+        ? 'Team Leader'
+        : user?.role
+          ? user.role.charAt(0).toUpperCase() + user.role.slice(1)
+          : '';
+
+  const roleVariant = (
+    user?.role === 'admin'
+      ? 'danger'
+      : user?.role === 'coordinator'
+        ? 'primary'
+        : user?.role === 'team_leader'
+          ? 'accent'
+          : 'success'
+  ) as 'danger' | 'primary' | 'accent' | 'success';
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 p-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent">
-            Settings
-          </h1>
-          <p className="text-slate-600 dark:text-slate-400 mt-2">
-            Manage your account settings and preferences
-          </p>
-        </div>
-
-        <div className="space-y-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Card>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800">
-                  <User size={20} className="text-blue-600 dark:text-blue-300" />
-                </div>
-                <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
-                  Profile Settings
-                </h2>
-              </div>
-
-              <form onSubmit={handleSaveProfile} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                      Full Name
-                    </label>
-                    <div className="relative">
-                      <User size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                      <Input
-                        type="text"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        placeholder="Enter your full name"
-                        className="pl-10"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                      Phone Number
-                    </label>
-                    <div className="relative">
-                      <Phone size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                      <Input
-                        type="tel"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        placeholder="+1 (555) 000-0000"
-                        className="pl-10"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    Email Address
-                  </label>
-                  <div className="relative">
-                    <Mail size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <Input
-                      type="email"
-                      value={user?.email || ''}
-                      disabled
-                      className="pl-10 bg-slate-50 dark:bg-slate-800 cursor-not-allowed"
-                    />
-                  </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Email cannot be changed
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    Profile Picture URL
-                  </label>
-                  <div className="relative">
-                    <Image size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                    <Input
-                      type="url"
-                      value={formData.profileImage}
-                      onChange={(e) => setFormData({ ...formData, profileImage: e.target.value })}
-                      placeholder="https://example.com/profile.jpg"
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-
-                {formData.profileImage && (
-                  <div className="flex items-center gap-4 p-4 rounded-lg bg-slate-50 dark:bg-slate-800">
-                    <img
-                      src={formData.profileImage}
-                      alt="Profile preview"
-                      className="w-16 h-16 rounded-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src = 'https://images.pexels.com/photos/1484810/pexels-photo-1484810.jpeg';
-                      }}
-                    />
-                    <div>
-                      <p className="text-sm font-medium text-slate-900 dark:text-white">
-                        Profile Picture Preview
-                      </p>
-                      <p className="text-xs text-slate-600 dark:text-slate-400">
-                        This is how your profile picture will appear
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex justify-end pt-4">
-                  <Button type="submit" className="gap-2">
-                    <Save size={18} />
-                    Save Changes
-                  </Button>
-                </div>
-              </form>
-            </Card>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.1 }}
-          >
-            <Card className="border-red-200 dark:border-red-900">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 rounded-lg bg-gradient-to-br from-red-100 to-red-200 dark:from-red-900 dark:to-red-800">
-                  <AlertTriangle size={20} className="text-red-600 dark:text-red-300" />
-                </div>
-                <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
-                  Danger Zone
-                </h2>
-              </div>
-
-              <div className="space-y-4">
-                <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30">
-                  <h3 className="text-lg font-semibold text-red-900 dark:text-red-200 mb-2">
-                    Delete Account
-                  </h3>
-                  <p className="text-sm text-red-700 dark:text-red-300 mb-4">
-                    Once you delete your account, there is no going back. This action cannot be undone.
-                    All your data including messages, rooms, and events will be permanently removed.
-                  </p>
-                  <Button
-                    onClick={() => setShowDeleteModal(true)}
-                    variant="outline"
-                    className="bg-red-600 text-white hover:bg-red-700 border-red-600 gap-2"
-                  >
-                    <AlertTriangle size={18} />
-                    Delete My Account
-                  </Button>
-                </div>
-
-                <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
-                    Sign Out
-                  </h3>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-                    Sign out from your current session. You can always sign back in later.
-                  </p>
-                  <Button
-                    onClick={() => {
-                      logout();
-                      navigate('/auth');
-                    }}
-                    variant="outline"
-                    className="gap-2"
-                  >
-                    <LogOut size={18} />
-                    Sign Out
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          </motion.div>
-        </div>
+    <div className="space-y-8 max-w-3xl">
+      <div>
+        <h1 className="font-heading font-bold text-3xl text-ink-950 dark:text-dark-50 tracking-tight">Settings</h1>
+        <p className="text-ink-500 dark:text-dark-400 mt-1">Manage your account settings and preferences</p>
       </div>
 
-      {showDeleteModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full p-6"
-          >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 rounded-xl bg-red-100 dark:bg-red-900/20">
-                <AlertTriangle size={24} className="text-red-600 dark:text-red-400" />
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+        <Card variant="warm">
+          <CardBody className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
+            <div className="relative flex-shrink-0">
+              <Avatar src={formData.profileImage || user?.profileImage} name={user?.name} size="xl" />
+              <button className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-primary-600 text-white flex items-center justify-center shadow-md hover:bg-primary-700 transition-colors">
+                <Camera size={13} />
+              </button>
+            </div>
+            <div className="text-center sm:text-left">
+              <h2 className="font-heading font-bold text-xl text-ink-950 dark:text-dark-50">{user?.name}</h2>
+              <p className="text-sm text-ink-500 dark:text-dark-400 mb-2">{user?.email}</p>
+              <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
+                <Badge variant={roleVariant}>{roleLabel}</Badge>
+                {user?.department && <Badge variant="default">{user.department}</Badge>}
               </div>
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-                Delete Account
-              </h2>
             </div>
+          </CardBody>
+        </Card>
+      </motion.div>
 
-            <p className="text-slate-600 dark:text-slate-400 mb-6">
-              This action is irreversible. All your data will be permanently deleted.
-            </p>
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}>
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-primary-100 dark:bg-primary-950/50 flex items-center justify-center">
+                <User size={18} className="text-primary-600 dark:text-primary-400" />
+              </div>
+              <div>
+                <h2 className="font-heading font-semibold text-lg text-ink-950 dark:text-dark-50">Profile Settings</h2>
+                <p className="text-sm text-ink-500 dark:text-dark-400">Update your personal information</p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardBody>
+            <form onSubmit={handleSaveProfile} className="space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Input
+                  label="Full Name"
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Jane Smith"
+                  icon={<User size={16} />}
+                  fullWidth
+                  required
+                />
+                <Input
+                  label="Phone Number"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="+91 98765 43210"
+                  icon={<Phone size={16} />}
+                  fullWidth
+                />
+              </div>
 
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Type <span className="font-bold text-red-600">DELETE</span> to confirm
-              </label>
               <Input
-                type="text"
-                value={deleteConfirmation}
-                onChange={(e) => setDeleteConfirmation(e.target.value)}
-                placeholder="DELETE"
-                className="font-mono"
+                label="Email Address"
+                type="email"
+                value={user?.email || ''}
+                disabled
+                icon={<Mail size={16} />}
+                hint="Email address cannot be changed"
+                fullWidth
               />
+
+              <Input
+                label="Profile Picture URL"
+                type="url"
+                value={formData.profileImage}
+                onChange={(e) => setFormData({ ...formData, profileImage: e.target.value })}
+                placeholder="https://example.com/photo.jpg"
+                icon={<ImageIcon size={16} />}
+                fullWidth
+              />
+
+              {formData.profileImage && (
+                <div className="flex items-center gap-4 p-4 rounded-2xl bg-paper-100 dark:bg-dark-800 border border-paper-200 dark:border-dark-700">
+                  <img
+                    src={formData.profileImage}
+                    alt="Profile preview"
+                    className="w-14 h-14 rounded-full object-cover ring-2 ring-primary-200 dark:ring-primary-800"
+                    onError={(e) => {
+                      e.currentTarget.src = 'https://images.pexels.com/photos/1484810/pexels-photo-1484810.jpeg';
+                    }}
+                  />
+                  <div>
+                    <p className="text-sm font-heading font-semibold text-ink-900 dark:text-dark-100">Preview</p>
+                    <p className="text-xs text-ink-500 dark:text-dark-400">This is how your profile picture will appear</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-end pt-1">
+                <Button type="submit" icon={<Save size={16} />}>
+                  Save Changes
+                </Button>
+              </div>
+            </form>
+          </CardBody>
+        </Card>
+      </motion.div>
+
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.2 }}>
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-paper-100 dark:bg-dark-700 flex items-center justify-center">
+                <Shield size={18} className="text-ink-500 dark:text-dark-300" />
+              </div>
+              <div>
+                <h2 className="font-heading font-semibold text-lg text-ink-950 dark:text-dark-50">Account Actions</h2>
+                <p className="text-sm text-ink-500 dark:text-dark-400">Manage your session and account</p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardBody className="space-y-4">
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-paper-50 dark:bg-dark-800 border border-ink-100 dark:border-dark-700">
+              <div>
+                <p className="text-sm font-heading font-semibold text-ink-900 dark:text-dark-100">Sign Out</p>
+                <p className="text-xs text-ink-500 dark:text-dark-400 mt-0.5">Sign out from your current session</p>
+              </div>
+              <Button variant="outline" icon={<LogOut size={16} />} onClick={() => { logout(); navigate('/auth'); }}>
+                Sign Out
+              </Button>
             </div>
 
-            <div className="flex gap-3">
-              <Button
-                onClick={() => {
-                  setShowDeleteModal(false);
-                  setDeleteConfirmation('');
-                }}
-                variant="outline"
-                className="flex-1"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleDeleteAccount}
-                className="flex-1 bg-red-600 hover:bg-red-700 text-white"
-                disabled={deleteConfirmation !== 'DELETE'}
-              >
-                Delete Account
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-danger-50/50 dark:bg-danger-600/5 border border-danger-200/60 dark:border-danger-600/20">
+              <div>
+                <p className="text-sm font-heading font-semibold text-danger-600 dark:text-danger-400">Delete Account</p>
+                <p className="text-xs text-danger-500/70 dark:text-danger-400/60 mt-0.5">Permanently delete your account and all data</p>
+              </div>
+              <Button variant="danger" icon={<AlertTriangle size={16} />} onClick={() => setShowDeleteModal(true)}>
+                Delete
               </Button>
             </div>
+          </CardBody>
+        </Card>
+      </motion.div>
+
+      <AnimatePresence>
+        {showDeleteModal && (
+          <motion.div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="bg-white dark:bg-dark-800 rounded-3xl shadow-2xl max-w-md w-full p-7 border border-ink-100 dark:border-dark-700"
+              initial={{ opacity: 0, scale: 0.94, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.94 }}
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-11 h-11 rounded-2xl bg-danger-100 dark:bg-danger-600/20 flex items-center justify-center">
+                  <AlertTriangle size={22} className="text-danger-600 dark:text-danger-400" />
+                </div>
+                <div>
+                  <h2 className="font-heading font-bold text-xl text-ink-950 dark:text-dark-50">Delete Account</h2>
+                  <p className="text-xs text-ink-500 dark:text-dark-400">This action cannot be undone</p>
+                </div>
+              </div>
+
+              <p className="text-sm text-ink-700 dark:text-dark-300 mb-5 leading-relaxed">
+                All your data including messages, rooms, and events will be permanently removed.
+              </p>
+
+              <div className="mb-5">
+                <Input
+                  label={<span>Type <strong className="text-danger-600">DELETE</strong> to confirm</span> as any}
+                  type="text"
+                  value={deleteConfirmation}
+                  onChange={(e) => setDeleteConfirmation(e.target.value)}
+                  placeholder="DELETE"
+                  className="font-mono"
+                  fullWidth
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <Button variant="ghost" className="flex-1" onClick={() => { setShowDeleteModal(false); setDeleteConfirmation(''); }}>
+                  Cancel
+                </Button>
+                <Button variant="danger" className="flex-1" onClick={handleDeleteAccount} disabled={deleteConfirmation !== 'DELETE'}>
+                  Delete Account
+                </Button>
+              </div>
+            </motion.div>
           </motion.div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 }

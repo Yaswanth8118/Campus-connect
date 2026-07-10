@@ -79,7 +79,7 @@ export function Table<T>({
     <div className={cn('overflow-x-auto', className)}>
       <table className="w-full">
         <thead>
-          <tr className="border-b border-gray-200 dark:border-secondary-700">
+          <tr className="border-b border-gray-200 dark:border-dark-700">
             {columns.map((column) => (
               <th
                 key={column.key}
@@ -107,8 +107,8 @@ export function Table<T>({
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.03, duration: 0.3 }}
               className={cn(
-                'border-b border-gray-100 dark:border-secondary-800 transition-colors',
-                hoverable && 'hover:bg-gray-50 dark:hover:bg-secondary-800/50',
+                'border-b border-gray-100 dark:border-dark-800 transition-colors',
+                hoverable && 'hover:bg-gray-50 dark:hover:bg-dark-800/50',
                 onRowClick && 'cursor-pointer'
               )}
               onClick={() => onRowClick?.(row)}

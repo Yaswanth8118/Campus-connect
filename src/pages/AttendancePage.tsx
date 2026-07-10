@@ -142,7 +142,7 @@ const AttendancePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50/50 via-white to-accent-50/50 dark:from-secondary-950 dark:via-secondary-900 dark:to-secondary-950">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50/50 via-white to-accent-50/50 dark:from-dark-950 dark:via-dark-900 dark:to-dark-950">
       <div className="container mx-auto px-4 py-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -222,7 +222,7 @@ const AttendancePage: React.FC = () => {
                 <select
                   value={selectedCourse}
                   onChange={(e) => setSelectedCourse(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 dark:border-secondary-700 rounded-lg bg-white dark:bg-secondary-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  className="px-4 py-2 border border-gray-300 dark:border-dark-700 rounded-lg bg-white dark:bg-dark-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 >
                   <option value="all">All Courses</option>
                   {getUniqueValues('course_name').map(course => (
@@ -232,7 +232,7 @@ const AttendancePage: React.FC = () => {
                 <select
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 dark:border-secondary-700 rounded-lg bg-white dark:bg-secondary-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  className="px-4 py-2 border border-gray-300 dark:border-dark-700 rounded-lg bg-white dark:bg-dark-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 >
                   <option value="all">All Months</option>
                   <option value="2025-11">November 2025</option>
@@ -257,7 +257,7 @@ const AttendancePage: React.FC = () => {
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-gray-200 dark:border-secondary-700">
+                    <tr className="border-b border-gray-200 dark:border-dark-700">
                       <th className="text-left py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">Date</th>
                       <th className="text-left py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">Course</th>
                       <th className="text-left py-3 px-4 text-gray-700 dark:text-gray-300 font-semibold">Status</th>
@@ -271,7 +271,7 @@ const AttendancePage: React.FC = () => {
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.05 }}
-                        className="border-b border-gray-100 dark:border-secondary-800 hover:bg-gray-50 dark:hover:bg-secondary-800/50 transition-colors"
+                        className="border-b border-gray-100 dark:border-dark-800 hover:bg-gray-50 dark:hover:bg-dark-800/50 transition-colors"
                       >
                         <td className="py-4 px-4 text-gray-900 dark:text-gray-100">
                           {new Date(record.date).toLocaleDateString('en-US', {

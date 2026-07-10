@@ -38,8 +38,8 @@ export function GradesPage() {
     comments: '',
   });
 
-  const isFaculty = user?.role === 'faculty' || user?.role === 'coordinator' || user?.role === 'admin';
-  const isStudent = user?.role === 'candidate';
+  const isFaculty = user?.role === 'coordinator' || user?.role === 'admin';
+  const isStudent = user?.role === 'student';
 
   useEffect(() => {
     if (user?.id) {
@@ -294,9 +294,9 @@ export function GradesPage() {
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-white/95 dark:bg-secondary-900/95 backdrop-blur-xl rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-white/20 dark:border-secondary-700/50"
+                className="bg-white/95 dark:bg-dark-900/95 backdrop-blur-xl rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-white/20 dark:border-dark-700/50"
               >
-                <div className="p-6 border-b border-gray-200 dark:border-secondary-700 flex justify-between items-center sticky top-0 bg-white/95 dark:bg-secondary-900/95 backdrop-blur-xl z-10">
+                <div className="p-6 border-b border-gray-200 dark:border-dark-700 flex justify-between items-center sticky top-0 bg-white/95 dark:bg-dark-900/95 backdrop-blur-xl z-10">
                   <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                     {editingGrade ? 'Edit Grade' : 'Add New Grade'}
                   </h2>
@@ -305,7 +305,7 @@ export function GradesPage() {
                       setShowModal(false);
                       resetForm();
                     }}
-                    className="p-2 hover:bg-gray-100 dark:hover:bg-secondary-800 rounded-lg transition-colors"
+                    className="p-2 hover:bg-gray-100 dark:hover:bg-dark-800 rounded-lg transition-colors"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -369,7 +369,7 @@ export function GradesPage() {
                       <select
                         value={formData.grade_letter}
                         onChange={(e) => setFormData({ ...formData, grade_letter: e.target.value })}
-                        className="w-full px-4 py-2.5 bg-white dark:bg-secondary-800 border border-gray-300 dark:border-secondary-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white"
+                        className="w-full px-4 py-2.5 bg-white dark:bg-dark-800 border border-gray-300 dark:border-dark-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white"
                         required
                       >
                         <option value="A">A</option>
@@ -390,7 +390,7 @@ export function GradesPage() {
                       onChange={(e) => setFormData({ ...formData, comments: e.target.value })}
                       placeholder="Add comments or feedback..."
                       rows={3}
-                      className="w-full px-4 py-2.5 bg-white dark:bg-secondary-800 border border-gray-300 dark:border-secondary-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white resize-none"
+                      className="w-full px-4 py-2.5 bg-white dark:bg-dark-800 border border-gray-300 dark:border-dark-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white resize-none"
                     />
                   </div>
 

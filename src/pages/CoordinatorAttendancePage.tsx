@@ -293,7 +293,7 @@ export function CoordinatorAttendancePage() {
                           setSelectedDepartment(e.target.value);
                           setSelectedCourse('');
                         }}
-                        className="w-full px-4 py-2.5 bg-white dark:bg-secondary-800 border border-gray-300 dark:border-secondary-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white"
+                        className="w-full px-4 py-2.5 bg-white dark:bg-dark-800 border border-gray-300 dark:border-dark-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white"
                       >
                         <option value="">Select Department</option>
                         {departments.map((dept) => (
@@ -312,7 +312,7 @@ export function CoordinatorAttendancePage() {
                         value={selectedCourse}
                         onChange={(e) => setSelectedCourse(e.target.value)}
                         disabled={!selectedDepartment}
-                        className="w-full px-4 py-2.5 bg-white dark:bg-secondary-800 border border-gray-300 dark:border-secondary-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full px-4 py-2.5 bg-white dark:bg-dark-800 border border-gray-300 dark:border-dark-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <option value="">Select Course</option>
                         {selectedDepartment &&
@@ -332,7 +332,7 @@ export function CoordinatorAttendancePage() {
                         type="date"
                         value={selectedDate}
                         onChange={(e) => setSelectedDate(e.target.value)}
-                        className="w-full px-4 py-2.5 bg-white dark:bg-secondary-800 border border-gray-300 dark:border-secondary-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white"
+                        className="w-full px-4 py-2.5 bg-white dark:bg-dark-800 border border-gray-300 dark:border-dark-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white"
                       />
                     </div>
                   </div>
@@ -396,7 +396,7 @@ export function CoordinatorAttendancePage() {
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: index * 0.05 }}
-                            className="bg-gray-50 dark:bg-secondary-800/50 rounded-xl p-4 border border-gray-200 dark:border-secondary-700"
+                            className="bg-gray-50 dark:bg-dark-800/50 rounded-xl p-4 border border-gray-200 dark:border-dark-700"
                           >
                             <div className="flex flex-col md:flex-row md:items-center gap-4">
                               <div className="flex-1">
@@ -423,7 +423,7 @@ export function CoordinatorAttendancePage() {
                                 placeholder="Notes..."
                                 value={student.notes}
                                 onChange={(e) => updateNotes(student.id, e.target.value)}
-                                className="flex-1 md:max-w-xs px-3 py-2 bg-white dark:bg-secondary-800 border border-gray-300 dark:border-secondary-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white"
+                                className="flex-1 md:max-w-xs px-3 py-2 bg-white dark:bg-dark-800 border border-gray-300 dark:border-dark-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white"
                               />
                             </div>
                           </motion.div>
@@ -457,7 +457,7 @@ export function CoordinatorAttendancePage() {
                     <select
                       value={selectedDepartment}
                       onChange={(e) => setSelectedDepartment(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-white dark:bg-secondary-800 border border-gray-300 dark:border-secondary-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white"
+                      className="w-full px-4 py-2.5 bg-white dark:bg-dark-800 border border-gray-300 dark:border-dark-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white"
                     >
                       <option value="">All Departments</option>
                       {departments.map((dept) => (
@@ -475,7 +475,7 @@ export function CoordinatorAttendancePage() {
                     <select
                       value={selectedCourse}
                       onChange={(e) => setSelectedCourse(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-white dark:bg-secondary-800 border border-gray-300 dark:border-secondary-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white"
+                      className="w-full px-4 py-2.5 bg-white dark:bg-dark-800 border border-gray-300 dark:border-dark-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white"
                     >
                       <option value="">All Courses</option>
                       {selectedDepartment &&

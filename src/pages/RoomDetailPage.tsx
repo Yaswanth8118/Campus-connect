@@ -49,9 +49,9 @@ const RoomDetailPage: React.FC = () => {
   const isMember = room?.members.includes(user?.id || '') || false;
   
   // Check if user has permission to manage room
-  const canManageRoom = user?.role === 'admin' || 
-                         user?.role === 'coordinator' || 
-                         (user?.role === 'faculty' && room?.createdBy === user.id);
+  const canManageRoom = user?.role === 'admin' ||
+                         user?.role === 'coordinator' ||
+                         (user?.role === 'team_leader' && room?.createdBy === user.id);
   
   const handleSendMessage = (content: string, type: 'text' | 'image' | 'video', mediaUrl?: string) => {
     if (!user || !room) return;

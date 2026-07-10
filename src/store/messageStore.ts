@@ -1,58 +1,13 @@
 import { create } from 'zustand';
 import { Message } from '../types';
+import { isSupabaseConfigured, dbSelect, dbInsert, dbDelete } from '../lib/supabase';
 
-// Mock messages data for the demo
 const mockMessages: Message[] = [
-  {
-    id: '1',
-    content: 'Welcome to the Freshman Orientation room!',
-    senderId: '2', // Coordinator ID
-    senderName: 'Coordinator User',
-    senderRole: 'coordinator',
-    roomId: '1',
-    timestamp: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-    type: 'text',
-  },
-  {
-    id: '2',
-    content: 'Please check the schedule for today\'s activities.',
-    senderId: '3', // Faculty ID
-    senderName: 'Faculty User',
-    senderRole: 'faculty',
-    roomId: '1',
-    timestamp: new Date(Date.now() - 1800000).toISOString(), // 30 minutes ago
-    type: 'text',
-  },
-  {
-    id: '3',
-    content: 'I have a question about the orientation schedule.',
-    senderId: '4', // Student ID
-    senderName: 'Student User',
-    senderRole: 'candidate',
-    roomId: '1',
-    timestamp: new Date(Date.now() - 900000).toISOString(), // 15 minutes ago
-    type: 'text',
-  },
-  {
-    id: '4',
-    content: 'We\'ll be covering career opportunities in tech today.',
-    senderId: '2', // Coordinator ID
-    senderName: 'Coordinator User',
-    senderRole: 'coordinator',
-    roomId: '2',
-    timestamp: new Date(Date.now() - 7200000).toISOString(), // 2 hours ago
-    type: 'text',
-  },
-  {
-    id: '5',
-    content: 'Today\'s exam prep session will focus on math concepts.',
-    senderId: '3', // Faculty ID
-    senderName: 'Faculty User',
-    senderRole: 'faculty',
-    roomId: '3',
-    timestamp: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-    type: 'text',
-  },
+  { id: '1', content: 'Welcome to the Freshman Orientation room!', senderId: '2', senderName: 'Coordinator User', senderRole: 'coordinator', roomId: '1', timestamp: new Date(Date.now() - 3600000).toISOString(), type: 'text' },
+  { id: '2', content: "Please check the schedule for today's activities.", senderId: '3', senderName: 'Team Lead', senderRole: 'team_leader', roomId: '1', timestamp: new Date(Date.now() - 1800000).toISOString(), type: 'text' },
+  { id: '3', content: 'I have a question about the orientation schedule.', senderId: '4', senderName: 'Student User', senderRole: 'student', roomId: '1', timestamp: new Date(Date.now() - 900000).toISOString(), type: 'text' },
+  { id: '4', content: "We'll be covering career opportunities in tech today.", senderId: '2', senderName: 'Coordinator User', senderRole: 'coordinator', roomId: '2', timestamp: new Date(Date.now() - 7200000).toISOString(), type: 'text' },
+  { id: '5', content: "Today's exam prep session will focus on math concepts.", senderId: '2', senderName: 'Coordinator User', senderRole: 'coordinator', roomId: '3', timestamp: new Date(Date.now() - 3600000).toISOString(), type: 'text' },
 ];
 
 interface MessageState {
@@ -75,45 +30,60 @@ export const useMessageStore = create<
   fetchMessages: async (roomId) => {
     set({ isLoading: true, error: null });
     try {
-      // Mock API call to fetch messages
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      const roomMessages = mockMessages.filter((m) => m.roomId === roomId);
-      set({ messages: roomMessages, isLoading: false });
+      if (isSupabaseConfigured()) {
+        const rows = await dbSelect('messages', `room_id=eq.${roomId}&select=*,profiles:sender_id(name,role)&order=created_at.asc`);
+        const messages: Message[] = rows.map((m: any) => ({
+          id: m.id,
+          content: m.content,
+          senderId: m.sender_id,
+          senderName: m.profiles?.name || 'Unknown',
+          senderRole: m.profiles?.role || 'student',
+          roomId: m.room_id,
+          eventId: m.event_id,
+          timestamp: m.created_at,
+          type: m.type || 'text',
+          mediaUrl: m.media_url,
+          fileName: m.file_name,
+        }));
+        set({ messages, isLoading: false });
+        return;
+      }
+      await new Promise((r) => setTimeout(r, 500));
+      set({ messages: mockMessages.filter((m) => m.roomId === roomId), isLoading: false });
     } catch (error) {
       set({ error: 'Failed to fetch messages', isLoading: false });
     }
   },
 
   sendMessage: async (message) => {
-    set({ isLoading: true, error: null });
     try {
-      // Mock API call to send message
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      const newMessage: Message = {
-        ...message,
-        id: `${Date.now()}`, // Generate a new ID
-        timestamp: new Date().toISOString(),
-      };
-      set((state) => ({
-        messages: [...state.messages, newMessage],
-        isLoading: false,
-      }));
+      if (isSupabaseConfigured()) {
+        const created = await dbInsert('messages', {
+          content: message.content,
+          sender_id: message.senderId,
+          room_id: message.roomId,
+          event_id: message.eventId || null,
+          type: message.type,
+          media_url: message.mediaUrl || '',
+          file_name: message.fileName || '',
+        });
+        const newMsg: Message = { ...message, id: created.id, timestamp: created.created_at };
+        set((s) => ({ messages: [...s.messages, newMsg] }));
+        return;
+      }
+      const newMsg: Message = { ...message, id: `${Date.now()}`, timestamp: new Date().toISOString() };
+      set((s) => ({ messages: [...s.messages, newMsg] }));
     } catch (error) {
-      set({ error: 'Failed to send message', isLoading: false });
+      set({ error: 'Failed to send message' });
     }
   },
 
   deleteMessage: async (id) => {
-    set({ isLoading: true, error: null });
     try {
-      // Mock API call to delete message
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      set((state) => ({
-        messages: state.messages.filter((m) => m.id !== id),
-        isLoading: false,
-      }));
+      if (isSupabaseConfigured()) await dbDelete('messages', `id=eq.${id}`);
+      set((s) => ({ messages: s.messages.filter((m) => m.id !== id) }));
     } catch (error) {
-      set({ error: 'Failed to delete message', isLoading: false });
+      set({ error: 'Failed to delete message' });
     }
   },
 }));

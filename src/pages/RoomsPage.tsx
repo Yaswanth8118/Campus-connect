@@ -18,9 +18,9 @@ const RoomsPage: React.FC = () => {
     fetchRooms();
   }, [fetchRooms]);
   
-  const canCreateRoom = user?.role === 'admin' || 
-                         user?.role === 'coordinator' || 
-                         user?.role === 'faculty';
+  const canCreateRoom = user?.role === 'admin' ||
+                         user?.role === 'coordinator' ||
+                         user?.role === 'team_leader';
   
   // Filter rooms based on search query
   const filteredRooms = rooms.filter(room => 

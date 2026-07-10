@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Calendar } from 'lucide-react';
+import { Plus, Search, Calendar, Radio, Filter } from 'lucide-react';
 import { useEventStore } from '../store/eventStore';
 import { useAuthStore } from '../store/authStore';
 import Button from '../components/ui/Button';
-import Input from '../components/ui/Input';
 import EventCard from '../components/dashboard/EventCard';
-import Badge from '../components/ui/Badge';
+import { Card, CardBody } from '../components/ui/Card';
 import { motion } from 'framer-motion';
 
 const EventsPage: React.FC = () => {
@@ -14,137 +13,106 @@ const EventsPage: React.FC = () => {
   const { user } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
-  
-  useEffect(() => {
-    fetchEvents();
-  }, [fetchEvents]);
-  
-  const canCreateEvent = user?.role === 'admin' || 
-                          user?.role === 'coordinator' || 
-                          user?.role === 'faculty';
-  
-  // Filter events based on search query
-  const filteredEvents = events.filter(event => 
-    event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    event.description.toLowerCase().includes(searchQuery.toLowerCase())
+
+  useEffect(() => { fetchEvents(); }, [fetchEvents]);
+
+  const canCreate = ['admin', 'coordinator', 'team_leader'].includes(user?.role ?? '');
+
+  const filtered = events.filter((e) =>
+    e.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    e.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
-  
-  // Separate events into live and upcoming
-  const liveEvents = filteredEvents.filter(event => event.isLive);
-  const upcomingEvents = filteredEvents.filter(event => !event.isLive);
-  
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
-  
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0 }
-  };
-  
+
+  const live = filtered.filter((e) => e.isLive);
+  const upcoming = filtered.filter((e) => !e.isLive);
+
+  const containerVariants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.07 } } };
+  const itemVariants = { hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0 } };
+
+  const EmptyState = ({ forLive }: { forLive: boolean }) => (
+    <Card animated={false}>
+      <CardBody className="flex flex-col items-center py-10 text-center">
+        {forLive
+          ? <Radio className="w-10 h-10 text-ink-300 dark:text-dark-600 mb-3" />
+          : <Calendar className="w-10 h-10 text-ink-300 dark:text-dark-600 mb-3" />}
+        <p className="text-sm text-ink-500 dark:text-dark-400">
+          {searchQuery
+            ? `No matching ${forLive ? 'live' : 'upcoming'} events found.`
+            : forLive ? 'No live events at the moment.' : 'No upcoming events scheduled.'}
+        </p>
+      </CardBody>
+    </Card>
+  );
+
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+    <div className="space-y-7">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Events</h1>
-          <p className="text-gray-600">View and participate in campus events</p>
+          <h1 className="font-heading font-bold text-3xl text-ink-950 dark:text-dark-50 tracking-tight">Events</h1>
+          <p className="text-ink-500 dark:text-dark-400 mt-1">View and participate in campus events</p>
         </div>
-        {canCreateEvent && (
-          <Button 
-            className="mt-4 md:mt-0"
-            icon={<Plus size={18} />}
-            onClick={() => navigate('/events/new')}
-          >
+        {canCreate && (
+          <Button icon={<Plus size={16} />} onClick={() => navigate('/events/new')}>
             Create Event
           </Button>
         )}
       </div>
-      
-      {/* Search */}
-      <div className="max-w-md">
-        <Input
-          placeholder="Search events..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          icon={<Search size={18} />}
-          fullWidth
-        />
+
+      <div className="flex gap-3 max-w-lg">
+        <div className="relative flex-1">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-400 dark:text-dark-400 w-4 h-4 pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Search events..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 text-sm bg-white dark:bg-dark-800 border border-ink-200 dark:border-dark-600 rounded-xl placeholder:text-ink-400 dark:placeholder:text-dark-400 text-ink-900 dark:text-dark-100 focus:outline-none focus:ring-2 focus:ring-primary-400/30 focus:border-primary-400 dark:focus:border-primary-500 transition-all"
+          />
+        </div>
+        <button className="p-2.5 rounded-xl border border-ink-200 dark:border-dark-600 bg-white dark:bg-dark-800 hover:bg-paper-100 dark:hover:bg-dark-750 transition-colors text-ink-500 dark:text-dark-300">
+          <Filter size={18} />
+        </button>
       </div>
-      
-      {/* Live Events */}
+
       <section>
-        <div className="flex items-center mb-4">
-          <Badge variant="danger" className="mr-2 animate-pulse">Live</Badge>
-          <h2 className="text-xl font-semibold text-gray-800">Live Events</h2>
+        <div className="flex items-center gap-2.5 mb-4">
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-danger-100 dark:bg-danger-600/20 text-danger-600 dark:text-danger-400 text-xs font-semibold border border-danger-200 dark:border-danger-600/30">
+            <span className="w-1.5 h-1.5 rounded-full bg-danger-500 animate-pulse" />
+            LIVE
+          </span>
+          <h2 className="font-heading font-bold text-xl text-ink-950 dark:text-dark-100">Live Events</h2>
+          {live.length > 0 && (
+            <span className="ml-1 px-2 py-0.5 rounded-full bg-danger-100 dark:bg-danger-600/20 text-danger-600 dark:text-danger-400 text-xs font-bold">{live.length}</span>
+          )}
         </div>
-        
-        {liveEvents.length > 0 ? (
-          <motion.div 
-            variants={containerVariants}
-            initial="hidden"
-            animate="show"
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-          >
-            {liveEvents.map((event) => (
-              <motion.div key={event.id} variants={itemVariants}>
-                <EventCard
-                  event={event}
-                  onClick={() => navigate(`/events/${event.id}`)}
-                />
+        {live.length > 0 ? (
+          <motion.div variants={containerVariants} initial="hidden" animate="show" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {live.map((e) => (
+              <motion.div key={e.id} variants={itemVariants}>
+                <EventCard event={e} onClick={() => navigate(`/events/${e.id}`)} />
               </motion.div>
             ))}
           </motion.div>
-        ) : (
-          <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-            <p className="text-gray-500">
-              {searchQuery 
-                ? "No matching live events found." 
-                : "No live events at the moment."}
-            </p>
-          </div>
-        )}
+        ) : <EmptyState forLive />}
       </section>
-      
-      {/* Upcoming Events */}
+
       <section>
-        <div className="flex items-center mb-4">
-          <Calendar className="h-5 w-5 text-blue-800 mr-2" />
-          <h2 className="text-xl font-semibold text-gray-800">Upcoming Events</h2>
+        <div className="flex items-center gap-2.5 mb-4">
+          <Calendar className="w-5 h-5 text-accent-500 dark:text-accent-400" />
+          <h2 className="font-heading font-bold text-xl text-ink-950 dark:text-dark-100">Upcoming Events</h2>
+          {upcoming.length > 0 && (
+            <span className="ml-1 px-2 py-0.5 rounded-full bg-accent-100 dark:bg-accent-900/30 text-accent-600 dark:text-accent-400 text-xs font-bold">{upcoming.length}</span>
+          )}
         </div>
-        
-        {upcomingEvents.length > 0 ? (
-          <motion.div 
-            variants={containerVariants}
-            initial="hidden"
-            animate="show"
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-          >
-            {upcomingEvents.map((event) => (
-              <motion.div key={event.id} variants={itemVariants}>
-                <EventCard
-                  event={event}
-                  onClick={() => navigate(`/events/${event.id}`)}
-                />
+        {upcoming.length > 0 ? (
+          <motion.div variants={containerVariants} initial="hidden" animate="show" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {upcoming.map((e) => (
+              <motion.div key={e.id} variants={itemVariants}>
+                <EventCard event={e} onClick={() => navigate(`/events/${e.id}`)} />
               </motion.div>
             ))}
           </motion.div>
-        ) : (
-          <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-            <p className="text-gray-500">
-              {searchQuery 
-                ? "No matching upcoming events found." 
-                : "No upcoming events scheduled."}
-            </p>
-          </div>
-        )}
+        ) : <EmptyState forLive={false} />}
       </section>
     </div>
   );

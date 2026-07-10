@@ -1,334 +1,196 @@
 import { create } from 'zustand';
-import { AuthState, User } from '../types';
+import { AuthState, User, UserRole } from '../types';
 import toast from 'react-hot-toast';
 import { z } from 'zod';
+import {
+  isSupabaseConfigured,
+  signInWithPassword,
+  signUp as supabaseSignUp,
+  signOut as supabaseSignOut,
+  getSessionUser,
+  clearSession,
+  dbSelect,
+  dbUpsert,
+} from '../lib/supabase';
 
-// Validation schemas
 const emailSchema = z.string().email('Please enter a valid email address');
-const otpSchema = z.string().regex(/^\d{6}$/, 'OTP must be exactly 6 digits');
-const passwordSchema = z.string()
+const passwordSchema = z
+  .string()
   .min(8, 'Password must be at least 8 characters')
-  .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-  .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-  .regex(/[0-9]/, 'Password must contain at least one number')
-  .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character');
+  .regex(/[A-Z]/, 'Must contain at least one uppercase letter')
+  .regex(/[a-z]/, 'Must contain at least one lowercase letter')
+  .regex(/[0-9]/, 'Must contain at least one number')
+  .regex(/[^A-Za-z0-9]/, 'Must contain at least one special character');
 
-// Mock user data with enhanced profiles
-const mockUsers: Record<string, User> = {
+const mockUsers: Record<string, { user: User; password: string }> = {
   'admin@campus.edu': {
-    id: '1',
-    email: 'admin@campus.edu',
-    name: 'Dr. Sarah Johnson',
-    role: 'admin',
-    profileImage: 'https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg',
-    phone: '+1234567890',
-    department: 'Administration',
-    isVerified: true,
-    createdAt: new Date().toISOString(),
+    user: { id: '1', email: 'admin@campus.edu', name: 'Dr. Sarah Johnson', role: 'admin', profileImage: 'https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg', phone: '+1234567890', department: 'Administration', isVerified: true, createdAt: new Date().toISOString() },
+    password: 'Admin@123',
   },
   'coordinator@campus.edu': {
-    id: '2',
-    email: 'coordinator@campus.edu',
-    name: 'Prof. Michael Chen',
-    role: 'coordinator',
-    profileImage: 'https://images.pexels.com/photos/1516680/pexels-photo-1516680.jpeg',
-    phone: '+1234567891',
-    department: 'Student Affairs',
-    isVerified: true,
-    createdAt: new Date().toISOString(),
+    user: { id: '2', email: 'coordinator@campus.edu', name: 'Prof. Michael Chen', role: 'coordinator', profileImage: 'https://images.pexels.com/photos/1516680/pexels-photo-1516680.jpeg', phone: '+1234567891', department: 'Student Affairs', isVerified: true, createdAt: new Date().toISOString() },
+    password: 'Coord@123',
   },
-  'faculty@campus.edu': {
-    id: '3',
-    email: 'faculty@campus.edu',
-    name: 'Dr. Emily Rodriguez',
-    role: 'faculty',
-    profileImage: 'https://images.pexels.com/photos/3777943/pexels-photo-3777943.jpeg',
-    phone: '+1234567892',
-    department: 'Computer Science',
-    isVerified: true,
-    createdAt: new Date().toISOString(),
+  'teamlead@campus.edu': {
+    user: { id: '3', email: 'teamlead@campus.edu', name: 'Alex Rivera', role: 'team_leader', profileImage: 'https://images.pexels.com/photos/3777943/pexels-photo-3777943.jpeg', phone: '+1234567892', department: 'Computer Science', isVerified: true, createdAt: new Date().toISOString() },
+    password: 'Lead@1234',
   },
   'student@campus.edu': {
-    id: '4',
-    email: 'student@campus.edu',
-    name: 'Alex Thompson',
-    role: 'candidate',
-    profileImage: 'https://images.pexels.com/photos/733872/pexels-photo-733872.jpeg',
-    phone: '+1234567893',
-    department: 'Computer Science',
-    isVerified: true,
-    createdAt: new Date().toISOString(),
+    user: { id: '4', email: 'student@campus.edu', name: 'Alex Thompson', role: 'student', profileImage: 'https://images.pexels.com/photos/733872/pexels-photo-733872.jpeg', phone: '+1234567893', department: 'Computer Science', isVerified: true, createdAt: new Date().toISOString() },
+    password: 'Student@1',
   },
 };
 
-// Initial state
-const initialState: AuthState = {
-  user: null,
-  isAuthenticated: false,
-  isLoading: false,
-  otpSent: false,
-  otpVerified: false,
-  error: null,
-  retryCount: 0,
-  lastOtpSentTime: null,
-  verificationMethod: 'email',
-};
+const initialState: AuthState = { user: null, isAuthenticated: false, isLoading: false, error: null };
 
-// Constants
-const MAX_RETRY_ATTEMPTS = 3;
-const OTP_COOLDOWN_PERIOD = 30000; // 30 seconds
+async function fetchProfile(userId: string): Promise<Partial<User> | null> {
+  try {
+    const rows = await dbSelect('profiles', `id=eq.${userId}&select=*`);
+    if (rows.length > 0) {
+      const p = rows[0];
+      return {
+        id: p.id,
+        email: p.email,
+        name: p.name,
+        role: p.role as UserRole,
+        profileImage: p.profile_image,
+        phone: p.phone,
+        department: p.department,
+        isVerified: p.is_verified,
+        createdAt: p.created_at,
+      };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
 
 export const useAuthStore = create<
   AuthState & {
-    sendOtp: (email: string) => Promise<void>;
-    verifyOtp: (email: string, otp: string) => Promise<void>;
-    setPassword: (email: string, password: string, userData: Partial<User>) => Promise<void>;
     login: (email: string, password: string) => Promise<void>;
+    register: (data: { email: string; password: string; name: string; role: UserRole; department?: string; phone?: string }) => Promise<void>;
     logout: () => void;
     resetAuth: () => void;
-    resendOtp: (email: string) => Promise<void>;
-    setVerificationMethod: (method: 'email' | 'sms') => void;
+    refreshProfile: () => Promise<void>;
   }
 >((set, get) => ({
   ...initialState,
 
-  setVerificationMethod: (method: 'email' | 'sms') => {
-    set({ verificationMethod: method });
-  },
-
-  sendOtp: async (email: string) => {
+  login: async (email, password) => {
     set({ isLoading: true, error: null });
     try {
-      // Validate email format
       emailSchema.parse(email);
+      const lowerEmail = email.toLowerCase().trim();
 
-      // Check cooldown period
-      const lastSentTime = get().lastOtpSentTime;
-      if (lastSentTime && Date.now() - lastSentTime < OTP_COOLDOWN_PERIOD) {
-        const remainingTime = Math.ceil((OTP_COOLDOWN_PERIOD - (Date.now() - lastSentTime)) / 1000);
-        throw new Error(`Please wait ${remainingTime} seconds before requesting another OTP`);
+      if (isSupabaseConfigured()) {
+        try {
+          const session = await signInWithPassword(lowerEmail, password);
+          const profile = await fetchProfile(session.user.id);
+          const meta = session.user.user_metadata || {};
+          const user: User = {
+            id: session.user.id,
+            email: session.user.email,
+            name: profile?.name || meta.name || lowerEmail.split('@')[0],
+            role: (profile?.role || meta.role || 'student') as UserRole,
+            profileImage: profile?.profileImage || meta.profile_image,
+            phone: profile?.phone || meta.phone || '',
+            department: profile?.department || meta.department || '',
+            isVerified: !!session.user.email_confirmed_at,
+            createdAt: session.user.created_at,
+          };
+          set({ user, isAuthenticated: true, isLoading: false });
+          toast.success(`Welcome back, ${user.name}!`);
+          return;
+        } catch (err: any) {
+          throw new Error(err.message || 'Invalid email or password');
+        }
       }
 
-      // For demo purposes, simulate OTP sending
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-      // In production, this would call your backend
-      // const response = await fetch('/send_otp', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      //   body: new URLSearchParams({ email }).toString(),
-      // });
-
-      toast.success(
-        <div className="flex flex-col">
-          <span className="font-semibold">OTP Sent Successfully!</span>
-          <span className="text-sm text-gray-600 mt-1">
-            Check your email inbox for the verification code
-          </span>
-          <span className="text-xs text-blue-600 mt-1">
-            Demo: Use any 6-digit number (e.g., 123456)
-          </span>
-        </div>,
-        { duration: 5000 }
-      );
-      
-      set({ 
-        otpSent: true, 
-        isLoading: false,
-        lastOtpSentTime: Date.now(),
-        retryCount: 0
-      });
+      // Fallback: mock users for demo
+      await new Promise((r) => setTimeout(r, 600));
+      const mock = mockUsers[lowerEmail];
+      if (mock && mock.password === password) {
+        set({ user: mock.user, isAuthenticated: true, isLoading: false });
+        toast.success(`Welcome back, ${mock.user.name}!`);
+        return;
+      }
+      throw new Error('Invalid email or password');
     } catch (error) {
-      const message = error instanceof z.ZodError 
-        ? error.errors[0].message 
-        : error instanceof Error 
-          ? error.message 
-          : 'Failed to send OTP';
-      
-      set({ error: message, isLoading: false });
-      toast.error(message);
+      const msg = error instanceof z.ZodError ? error.errors[0].message : error instanceof Error ? error.message : 'Login failed';
+      set({ error: msg, isLoading: false });
+      toast.error(msg);
     }
   },
 
-  verifyOtp: async (email: string, otp: string) => {
+  register: async (data) => {
     set({ isLoading: true, error: null });
     try {
-      // Check retry attempts
-      const retryCount = get().retryCount;
-      if (retryCount >= MAX_RETRY_ATTEMPTS) {
-        throw new Error(`Maximum retry attempts (${MAX_RETRY_ATTEMPTS}) reached. Please request a new OTP.`);
+      emailSchema.parse(data.email);
+      passwordSchema.parse(data.password);
+      if (!data.name.trim()) throw new Error('Full name is required');
+
+      const lowerEmail = data.email.toLowerCase().trim();
+
+      if (isSupabaseConfigured()) {
+        const session = await supabaseSignUp(lowerEmail, data.password, {
+          name: data.name,
+          role: data.role,
+          department: data.department || '',
+          phone: data.phone || '',
+        });
+
+        const user: User = {
+          id: session.user.id,
+          email: lowerEmail,
+          name: data.name,
+          role: data.role,
+          phone: data.phone || '',
+          department: data.department || '',
+          isVerified: !!session.user.email_confirmed_at,
+          createdAt: new Date().toISOString(),
+        };
+        set({ user, isAuthenticated: true, isLoading: false });
+        toast.success('Account created successfully!');
+        return;
       }
 
-      // Validate OTP format
-      otpSchema.parse(otp);
-
-      // For demo purposes, accept any 6-digit OTP
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-      // In production, this would call your backend
-      // const response = await fetch('/verify_otp', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      //   body: new URLSearchParams({ email, otp }).toString(),
-      // });
-
-      toast.success(
-        <div className="flex flex-col">
-          <span className="font-semibold">OTP Verified!</span>
-          <span className="text-sm text-gray-600 mt-1">
-            Email verified successfully
-          </span>
-        </div>,
-        { duration: 3000 }
-      );
-
-      set({ 
-        otpVerified: true, 
-        isLoading: false,
-        retryCount: 0
-      });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to verify OTP';
-      const remainingAttempts = MAX_RETRY_ATTEMPTS - get().retryCount - 1;
-      
-      set(state => ({ 
-        error: message, 
-        isLoading: false,
-        retryCount: state.retryCount + 1
-      }));
-      
-      toast.error(
-        <div className="flex flex-col">
-          <span className="font-semibold">Invalid OTP</span>
-          <span className="text-sm text-gray-600 mt-1">
-            {remainingAttempts} attempts remaining
-          </span>
-        </div>
-      );
-    }
-  },
-
-  setPassword: async (email: string, password: string, userData: Partial<User>) => {
-    set({ isLoading: true, error: null });
-    try {
-      // Validate password requirements
-      passwordSchema.parse(password);
-
-      // Create new user account
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-      const newUser: User = {
+      // Fallback: mock registration
+      await new Promise((r) => setTimeout(r, 800));
+      const user: User = {
         id: `${Date.now()}`,
-        email: email,
-        name: userData.name || 'New User',
-        role: userData.role || 'candidate',
-        phone: userData.phone,
-        department: userData.department,
+        email: lowerEmail,
+        name: data.name,
+        role: data.role,
+        phone: data.phone || '',
+        department: data.department || '',
         isVerified: true,
         createdAt: new Date().toISOString(),
-        ...userData,
       };
-
-      // Auto-login the user after account creation
-      set({ 
-        user: newUser, 
-        isAuthenticated: true, 
-        isLoading: false,
-        otpSent: false,
-        otpVerified: false,
-        retryCount: 0,
-        lastOtpSentTime: null
-      });
-
-      toast.success(
-        <div className="flex flex-col">
-          <span className="font-semibold">Account Created Successfully!</span>
-          <span className="text-sm text-gray-600 mt-1">
-            Welcome to Campus Connect
-          </span>
-        </div>,
-        { duration: 4000 }
-      );
+      set({ user, isAuthenticated: true, isLoading: false });
+      toast.success('Account created successfully!');
     } catch (error) {
-      const message = error instanceof z.ZodError 
-        ? error.errors[0].message 
-        : error instanceof Error 
-          ? error.message 
-          : 'Failed to create account';
-      
-      set({ 
-        error: message, 
-        isLoading: false,
-        otpSent: false,
-        otpVerified: false
-      });
-      toast.error(message);
-    }
-  },
-
-  login: async (email: string, password: string) => {
-    set({ isLoading: true, error: null });
-    try {
-      // Validate email format
-      emailSchema.parse(email);
-
-      // Mock API call to login
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-      const user = mockUsers[email];
-      if (user && password === 'password') { // For demo purposes
-        set({ 
-          user, 
-          isAuthenticated: true, 
-          isLoading: false,
-          retryCount: 0,
-          lastOtpSentTime: null
-        });
-        
-        toast.success(
-          <div className="flex flex-col">
-            <span className="font-semibold">Welcome back!</span>
-            <span className="text-sm text-gray-600 mt-1">
-              Logged in as {user.role}
-            </span>
-          </div>,
-          { duration: 3000 }
-        );
-      } else {
-        throw new Error('Invalid credentials');
-      }
-    } catch (error) {
-      const message = error instanceof z.ZodError 
-        ? error.errors[0].message 
-        : error instanceof Error 
-          ? error.message 
-          : 'Failed to login';
-      
-      set({ error: message, isLoading: false });
-      toast.error(message);
+      const msg = error instanceof z.ZodError ? error.errors[0].message : error instanceof Error ? error.message : 'Registration failed';
+      set({ error: msg, isLoading: false });
+      toast.error(msg);
     }
   },
 
   logout: () => {
-    set({ 
-      ...initialState,
-      user: null, 
-      isAuthenticated: false 
-    });
-    toast.success('Logged out successfully');
+    supabaseSignOut().catch(() => {});
+    clearSession();
+    set({ ...initialState });
+    toast.success('Signed out successfully');
   },
 
-  resetAuth: () => {
-    set(initialState);
-  },
+  resetAuth: () => set(initialState),
 
-  resendOtp: async (email: string) => {
-    const store = get();
-    if (store.lastOtpSentTime && Date.now() - store.lastOtpSentTime < OTP_COOLDOWN_PERIOD) {
-      const remainingTime = Math.ceil((OTP_COOLDOWN_PERIOD - (Date.now() - store.lastOtpSentTime)) / 1000);
-      toast.error(`Please wait ${remainingTime} seconds before requesting another OTP`);
-      return;
+  refreshProfile: async () => {
+    const currentUser = get().user;
+    if (!currentUser || !isSupabaseConfigured()) return;
+    const profile = await fetchProfile(currentUser.id);
+    if (profile) {
+      set({ user: { ...currentUser, ...profile } });
     }
-    await store.sendOtp(email);
-  }
+  },
 }));

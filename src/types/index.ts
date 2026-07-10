@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'coordinator' | 'faculty' | 'candidate';
+export type UserRole = 'admin' | 'coordinator' | 'team_leader' | 'student';
 
 export interface User {
   id: string;
@@ -16,12 +16,7 @@ export interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  otpSent: boolean;
-  otpVerified: boolean;
   error: string | null;
-  retryCount: number;
-  lastOtpSentTime: number | null;
-  verificationMethod: 'email' | 'sms';
 }
 
 export interface Room {
@@ -72,8 +67,8 @@ export interface Permission {
 export interface RolePermissions {
   admin: Permission[];
   coordinator: Permission[];
-  faculty: Permission[];
-  candidate: Permission[];
+  team_leader: Permission[];
+  student: Permission[];
 }
 
 export interface Department {

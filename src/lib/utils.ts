@@ -38,9 +38,9 @@ export function getRoleColor(role: string): string {
       return 'bg-red-100 text-red-800';
     case 'coordinator':
       return 'bg-blue-100 text-blue-800';
-    case 'faculty':
-      return 'bg-purple-100 text-purple-800';
-    case 'candidate':
+    case 'team_leader':
+      return 'bg-accent-100 text-accent-800';
+    case 'student':
       return 'bg-green-100 text-green-800';
     default:
       return 'bg-gray-100 text-gray-800';
