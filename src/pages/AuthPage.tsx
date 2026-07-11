@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import AuthForm from '../components/auth/AuthForm';
 import ThemeToggle from '../components/ui/ThemeToggle';
@@ -16,8 +16,20 @@ const features = [
 ];
 
 const AuthPage: React.FC = () => {
-  const { isAuthenticated } = useAuthStore();
-  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
+  const { isAuthenticated, initializing } = useAuthStore();
+  const location = useLocation();
+  const from = (location.state as { from?: string })?.from || '/dashboard';
+
+  // Wait for session restore so we don't flash the login form to a logged-in user.
+  if (initializing) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-ink-950 via-dark-900 to-dark-950">
+        <div className="h-12 w-12 rounded-full border-4 border-primary-300/40 border-t-primary-500 animate-spin" />
+      </div>
+    );
+  }
+
+  if (isAuthenticated) return <Navigate to={from} replace />;
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-ink-950 via-dark-900 to-dark-950">

@@ -49,6 +49,66 @@ export function getSessionUser(): SupabaseUser | null {
   return getSession()?.user || null;
 }
 
+// Raw stored session WITHOUT the expiry check — used during startup restore so
+// we can attempt a refresh instead of discarding an otherwise-valid session.
+export function getStoredSession(): SupabaseSession | null {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    return raw ? (JSON.parse(raw) as SupabaseSession) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function isSessionExpired(session: SupabaseSession): boolean {
+  // treat as expired 30s early to avoid racing the boundary
+  return !!session.expires_at && Date.now() / 1000 > session.expires_at - 30;
+}
+
+// Exchange a refresh token for a fresh access token. Returns null if the refresh
+// token is invalid/expired (caller should then force a re-login).
+export async function refreshSession(): Promise<SupabaseSession | null> {
+  const current = getStoredSession();
+  if (!current?.refresh_token) return null;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SUPABASE_ANON_KEY },
+      body: JSON.stringify({ refresh_token: current.refresh_token }),
+    });
+    if (!res.ok) {
+      clearSession();
+      return null;
+    }
+    const data = await res.json();
+    if (!data.access_token) {
+      clearSession();
+      return null;
+    }
+    const session: SupabaseSession = {
+      access_token: data.access_token,
+      refresh_token: data.refresh_token ?? current.refresh_token,
+      expires_at: data.expires_at,
+      user: data.user ?? current.user,
+    };
+    saveSession(session);
+    return session;
+  } catch {
+    return null;
+  }
+}
+
+// Return a usable session, refreshing transparently if the access token has
+// expired. Returns null only when there is no session or the refresh failed.
+export async function restoreSession(): Promise<SupabaseSession | null> {
+  const stored = getStoredSession();
+  if (!stored) return null;
+  if (isSessionExpired(stored)) {
+    return refreshSession();
+  }
+  return stored;
+}
+
 function authHeaders(): Record<string, string> {
   const token = getAccessToken();
   return {
@@ -129,6 +189,19 @@ export async function dbSelect<T = any>(
   const res = await fetch(url, { headers: authHeaders() });
   if (!res.ok) throw new Error(`Failed to fetch ${table}`);
   return res.json();
+}
+
+// Efficient exact row count via PostgREST's Content-Range header (no rows transferred).
+export async function dbCount(table: string, filter: string = ''): Promise<number> {
+  const url = `${SUPABASE_URL}/rest/v1/${table}?select=id${filter ? '&' + filter : ''}`;
+  const res = await fetch(url, {
+    method: 'HEAD',
+    headers: { ...authHeaders(), Prefer: 'count=exact', Range: '0-0' },
+  });
+  if (!res.ok) return 0;
+  const range = res.headers.get('content-range'); // e.g. "0-0/123" or "*/123"
+  const total = range?.split('/')?.[1];
+  return total ? parseInt(total, 10) : 0;
 }
 
 export async function dbInsert<T = any>(

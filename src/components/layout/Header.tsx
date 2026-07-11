@@ -6,6 +6,8 @@ import { useAuthStore } from '../../store/authStore';
 import Avatar from '../ui/Avatar';
 import Badge from '../ui/Badge';
 import ThemeToggle from '../ui/ThemeToggle';
+import { announcementsRepo } from '../../services/entities';
+import { formatDate } from '../../lib/utils';
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -17,24 +19,27 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   const [showNotifications, setShowNotifications] = React.useState(false);
   const [showUserMenu, setShowUserMenu] = React.useState(false);
 
+  const [notifications, setNotifications] = React.useState<any[]>([]);
+
+  React.useEffect(() => {
+    announcementsRepo
+      .list('select=id,title,description,created_at&order=created_at.desc&limit=5')
+      .then(setNotifications)
+      .catch(() => setNotifications([]));
+  }, []);
+
   const handleLogout = () => {
     logout();
     navigate('/auth');
   };
 
-  const mockNotifications = [
-    { id: 1, title: 'New event created', message: 'Orientation Session starts in 1 hour', time: '5m ago', unread: true },
-    { id: 2, title: 'Room invitation', message: 'You were added to Career Development room', time: '1h ago', unread: true },
-    { id: 3, title: 'System update', message: 'Campus Connect has been updated', time: '2h ago', unread: false },
-  ];
-
-  const unreadCount = mockNotifications.filter((n) => n.unread).length;
+  const unreadCount = notifications.length;
 
   const roleLabel =
     user?.role === 'student'
       ? 'Student'
-      : user?.role === 'team_leader'
-        ? 'Team Leader'
+      : user?.role === 'faculty'
+        ? 'Faculty'
         : user?.role
           ? user.role.charAt(0).toUpperCase() + user.role.slice(1)
           : '';
@@ -44,7 +49,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
       ? 'danger'
       : user?.role === 'coordinator'
         ? 'primary'
-        : user?.role === 'team_leader'
+        : user?.role === 'faculty'
           ? 'accent'
           : 'success'
   ) as 'danger' | 'primary' | 'accent' | 'success';
@@ -132,28 +137,23 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
                       <Badge variant="primary" size="sm">{unreadCount} new</Badge>
                     </div>
                     <div className="max-h-72 overflow-y-auto divide-y divide-ink-50 dark:divide-dark-700">
-                      {mockNotifications.map((n) => (
-                        <motion.div
-                          key={n.id}
-                          className={`px-4 py-3 hover:bg-paper-50 dark:hover:bg-dark-750 cursor-pointer transition-colors ${n.unread ? 'bg-primary-50/30 dark:bg-primary-950/10' : ''}`}
-                          whileHover={{ x: 3 }}
-                        >
+                      {notifications.length === 0 ? (
+                        <p className="px-4 py-6 text-center text-xs text-ink-500 dark:text-dark-400">No announcements</p>
+                      ) : notifications.map((n) => (
+                        <div key={n.id} className="px-4 py-3 hover:bg-paper-50 dark:hover:bg-dark-750 transition-colors">
                           <div className="flex justify-between items-start gap-2">
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-ink-900 dark:text-dark-100 flex items-center gap-1.5">
-                                {n.unread && <span className="w-1.5 h-1.5 rounded-full bg-primary-500 flex-shrink-0 mt-0.5" />}
-                                {n.title}
-                              </p>
-                              <p className="text-xs text-ink-500 dark:text-dark-400 mt-0.5 truncate">{n.message}</p>
+                              <p className="text-sm font-medium text-ink-900 dark:text-dark-100 truncate">{n.title}</p>
+                              {n.description && <p className="text-xs text-ink-500 dark:text-dark-400 mt-0.5 truncate">{n.description}</p>}
                             </div>
-                            <span className="text-xs text-ink-400 dark:text-dark-500 flex-shrink-0">{n.time}</span>
+                            <span className="text-xs text-ink-400 dark:text-dark-500 flex-shrink-0">{formatDate(n.created_at)}</span>
                           </div>
-                        </motion.div>
+                        </div>
                       ))}
                     </div>
                     <div className="px-4 py-2.5 border-t border-ink-100 dark:border-dark-700">
-                      <button className="text-xs text-primary-600 dark:text-primary-400 font-medium hover:underline">
-                        Mark all as read
+                      <button onClick={() => { setShowNotifications(false); navigate('/announcements'); }} className="text-xs text-primary-600 dark:text-primary-400 font-medium hover:underline">
+                        View all announcements
                       </button>
                     </div>
                   </motion.div>

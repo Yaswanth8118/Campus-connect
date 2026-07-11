@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'coordinator' | 'team_leader' | 'student';
+export type UserRole = 'admin' | 'coordinator' | 'faculty' | 'student';
 
 export interface User {
   id: string;
@@ -16,6 +16,9 @@ export interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  // true while the app is restoring a persisted session on startup; protected
+  // routes must show a loader (not redirect) while this is true.
+  initializing: boolean;
   error: string | null;
 }
 
@@ -67,7 +70,7 @@ export interface Permission {
 export interface RolePermissions {
   admin: Permission[];
   coordinator: Permission[];
-  team_leader: Permission[];
+  faculty: Permission[];
   student: Permission[];
 }
 

@@ -1,504 +1,129 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Users, CheckCircle, XCircle, Clock, Filter, Save, Edit2, Download } from 'lucide-react';
-import { Card } from '../components/ui/Card';
-import { Badge } from '../components/ui/Badge';
+import { useEffect, useState } from 'react';
+import { ClipboardCheck, Plus, Trash2 } from 'lucide-react';
+import { useAuthStore } from '../store/authStore';
+import { Card, CardBody } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { Table, TableColumn } from '../components/ui/Table';
+import { Input } from '../components/ui/Input';
+import Badge from '../components/ui/Badge';
+import Modal, { Select } from '../components/ui/Modal';
 import toast from 'react-hot-toast';
+import {
+  attendanceRepo, attendanceWithNames, studentsWithUser, subjectsWithNames, myFacultyId,
+} from '../services/entities';
+import { formatDate } from '../lib/utils';
 
-interface Student {
-  id: string;
-  name: string;
-  email: string;
-  department: string;
-}
-
-interface AttendanceRecord {
-  id: string;
-  student_id: string;
-  student_name: string;
-  course_name: string;
-  date: string;
-  status: 'present' | 'absent' | 'late' | 'excused';
-  notes: string;
-}
-
-interface AttendanceSession {
-  course: string;
-  date: string;
-  students: {
-    id: string;
-    name: string;
-    status: 'present' | 'absent' | 'late' | 'excused';
-    notes: string;
-  }[];
-}
+const STATUSES = ['present', 'absent', 'late', 'excused'];
+const today = () => new Date().toISOString().slice(0, 10);
+const empty = () => ({ student_id: '', subject_id: '', date: today(), status: 'present', remarks: '' });
+const statusVariant = (s: string) =>
+  (s === 'present' ? 'success' : s === 'late' ? 'warning' : s === 'excused' ? 'accent' : 'danger') as any;
 
 export function CoordinatorAttendancePage() {
-  const [selectedDepartment, setSelectedDepartment] = useState('');
-  const [selectedCourse, setSelectedCourse] = useState('');
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [students, setStudents] = useState<Student[]>([]);
-  const [attendanceSession, setAttendanceSession] = useState<AttendanceSession | null>(null);
-  const [records, setRecords] = useState<AttendanceRecord[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [viewMode, setViewMode] = useState<'mark' | 'history'>('mark');
+  const { user } = useAuthStore();
+  const canManage = user?.role === 'admin' || user?.role === 'faculty' || user?.role === 'coordinator';
+  const [rows, setRows] = useState<any[] | null>(null);
+  const [students, setStudents] = useState<any[]>([]);
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState(empty());
+  const [saving, setSaving] = useState(false);
 
-  const departments = ['Computer Science', 'Electronics', 'Mechanical', 'Civil'];
-  const courses = {
-    'Computer Science': ['Data Structures', 'Algorithms', 'Web Development', 'Database Systems'],
-    'Electronics': ['Digital Electronics', 'Microprocessors', 'Communication Systems'],
-    'Mechanical': ['Thermodynamics', 'Fluid Mechanics', 'Manufacturing'],
-    'Civil': ['Structural Analysis', 'Surveying', 'Construction Management'],
-  };
-
+  const load = () => attendanceWithNames().then(setRows).catch(() => setRows([]));
   useEffect(() => {
-    if (viewMode === 'history') {
-      fetchAttendanceHistory();
-    }
-  }, [viewMode, selectedDepartment, selectedCourse]);
+    load();
+    studentsWithUser().then(setStudents).catch(() => setStudents([]));
+    subjectsWithNames().then(setSubjects).catch(() => setSubjects([]));
+  }, []);
 
-  const fetchStudents = () => {
-    if (!selectedDepartment || !selectedCourse) {
-      toast.error('Please select department and course');
-      return;
-    }
-
-    setLoading(true);
-    setTimeout(() => {
-      const mockStudents: Student[] = [
-        { id: '1', name: 'John Doe', email: 'john@example.com', department: selectedDepartment },
-        { id: '2', name: 'Jane Smith', email: 'jane@example.com', department: selectedDepartment },
-        { id: '3', name: 'Bob Johnson', email: 'bob@example.com', department: selectedDepartment },
-        { id: '4', name: 'Alice Williams', email: 'alice@example.com', department: selectedDepartment },
-        { id: '5', name: 'Charlie Brown', email: 'charlie@example.com', department: selectedDepartment },
-      ];
-
-      setStudents(mockStudents);
-      setAttendanceSession({
-        course: selectedCourse,
-        date: selectedDate,
-        students: mockStudents.map(s => ({
-          id: s.id,
-          name: s.name,
-          status: 'present',
-          notes: '',
-        })),
-      });
-      setLoading(false);
-    }, 500);
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.student_id || !form.subject_id) { toast.error('Student and subject are required'); return; }
+    setSaving(true);
+    try {
+      const faculty_id = user?.role === 'faculty' ? await myFacultyId(user.id) : null;
+      await attendanceRepo.create({ ...form, ...(faculty_id ? { faculty_id } : {}) });
+      toast.success('Attendance marked');
+      setOpen(false);
+      setForm(empty());
+      load();
+    } catch { toast.error('Save failed — check your permissions (or duplicate entry)'); }
+    finally { setSaving(false); }
   };
 
-  const fetchAttendanceHistory = () => {
-    setLoading(true);
-    setTimeout(() => {
-      const mockRecords: AttendanceRecord[] = [
-        {
-          id: '1',
-          student_id: '1',
-          student_name: 'John Doe',
-          course_name: 'Data Structures',
-          date: '2025-11-28',
-          status: 'present',
-          notes: '',
-        },
-        {
-          id: '2',
-          student_id: '2',
-          student_name: 'Jane Smith',
-          course_name: 'Data Structures',
-          date: '2025-11-28',
-          status: 'absent',
-          notes: 'Sick leave',
-        },
-        {
-          id: '3',
-          student_id: '3',
-          student_name: 'Bob Johnson',
-          course_name: 'Data Structures',
-          date: '2025-11-28',
-          status: 'late',
-          notes: 'Traffic',
-        },
-      ];
-      setRecords(mockRecords);
-      setLoading(false);
-    }, 500);
+  const remove = async (r: any) => {
+    if (!confirm('Delete this record?')) return;
+    try { await attendanceRepo.remove(r.id); toast.success('Deleted'); load(); }
+    catch { toast.error('Delete failed'); }
   };
-
-  const updateAttendance = (studentId: string, status: AttendanceRecord['status']) => {
-    if (!attendanceSession) return;
-
-    setAttendanceSession({
-      ...attendanceSession,
-      students: attendanceSession.students.map(s =>
-        s.id === studentId ? { ...s, status } : s
-      ),
-    });
-  };
-
-  const updateNotes = (studentId: string, notes: string) => {
-    if (!attendanceSession) return;
-
-    setAttendanceSession({
-      ...attendanceSession,
-      students: attendanceSession.students.map(s =>
-        s.id === studentId ? { ...s, notes } : s
-      ),
-    });
-  };
-
-  const saveAttendance = async () => {
-    if (!attendanceSession) return;
-
-    setLoading(true);
-    setTimeout(() => {
-      toast.success('Attendance saved successfully!');
-      setLoading(false);
-      setAttendanceSession(null);
-      setStudents([]);
-    }, 1000);
-  };
-
-  const getStatusColor = (status: AttendanceRecord['status']) => {
-    switch (status) {
-      case 'present':
-        return 'success';
-      case 'absent':
-        return 'danger';
-      case 'late':
-        return 'warning';
-      case 'excused':
-        return 'secondary';
-      default:
-        return 'secondary';
-    }
-  };
-
-  const getStatusIcon = (status: AttendanceRecord['status']) => {
-    switch (status) {
-      case 'present':
-        return <CheckCircle className="w-5 h-5" />;
-      case 'absent':
-        return <XCircle className="w-5 h-5" />;
-      case 'late':
-        return <Clock className="w-5 h-5" />;
-      case 'excused':
-        return <CheckCircle className="w-5 h-5" />;
-      default:
-        return null;
-    }
-  };
-
-  const calculateStats = () => {
-    if (!attendanceSession) return { present: 0, absent: 0, late: 0, excused: 0 };
-
-    const stats = {
-      present: attendanceSession.students.filter(s => s.status === 'present').length,
-      absent: attendanceSession.students.filter(s => s.status === 'absent').length,
-      late: attendanceSession.students.filter(s => s.status === 'late').length,
-      excused: attendanceSession.students.filter(s => s.status === 'excused').length,
-    };
-
-    return stats;
-  };
-
-  const stats = calculateStats();
-
-  const historyColumns: TableColumn<AttendanceRecord>[] = [
-    {
-      key: 'date',
-      label: 'Date',
-      sortable: true,
-      render: (value) => new Date(value).toLocaleDateString(),
-    },
-    {
-      key: 'student_name',
-      label: 'Student',
-      sortable: true,
-      render: (value) => <span className="font-semibold">{value}</span>,
-    },
-    {
-      key: 'course_name',
-      label: 'Course',
-      sortable: true,
-    },
-    {
-      key: 'status',
-      label: 'Status',
-      sortable: true,
-      render: (value) => (
-        <Badge variant={getStatusColor(value as any)}>
-          {value}
-        </Badge>
-      ),
-    },
-    {
-      key: 'notes',
-      label: 'Notes',
-      render: (value) => value || '-',
-    },
-  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-50 to-white dark:from-slate-900 dark:via-slate-850 dark:to-slate-900 p-6">
-      <div className="max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-                Attendance Management
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400">
-                Mark and manage student attendance
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <Button
-                variant={viewMode === 'mark' ? 'primary' : 'secondary'}
-                onClick={() => setViewMode('mark')}
-              >
-                Mark Attendance
-              </Button>
-              <Button
-                variant={viewMode === 'history' ? 'primary' : 'secondary'}
-                onClick={() => setViewMode('history')}
-              >
-                View History
-              </Button>
-            </div>
-          </div>
-
-          {viewMode === 'mark' && (
-            <>
-              <Card className="mb-6">
-                <div className="p-6">
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                    <Filter className="w-5 h-5" />
-                    Select Class
-                  </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Department *
-                      </label>
-                      <select
-                        value={selectedDepartment}
-                        onChange={(e) => {
-                          setSelectedDepartment(e.target.value);
-                          setSelectedCourse('');
-                        }}
-                        className="w-full px-4 py-2.5 bg-white dark:bg-dark-800 border border-gray-300 dark:border-dark-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white"
-                      >
-                        <option value="">Select Department</option>
-                        {departments.map((dept) => (
-                          <option key={dept} value={dept}>
-                            {dept}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Course *
-                      </label>
-                      <select
-                        value={selectedCourse}
-                        onChange={(e) => setSelectedCourse(e.target.value)}
-                        disabled={!selectedDepartment}
-                        className="w-full px-4 py-2.5 bg-white dark:bg-dark-800 border border-gray-300 dark:border-dark-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <option value="">Select Course</option>
-                        {selectedDepartment &&
-                          courses[selectedDepartment as keyof typeof courses]?.map((course) => (
-                            <option key={course} value={course}>
-                              {course}
-                            </option>
-                          ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Date *
-                      </label>
-                      <input
-                        type="date"
-                        value={selectedDate}
-                        onChange={(e) => setSelectedDate(e.target.value)}
-                        className="w-full px-4 py-2.5 bg-white dark:bg-dark-800 border border-gray-300 dark:border-dark-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white"
-                      />
-                    </div>
-                  </div>
-
-                  <Button onClick={fetchStudents} disabled={!selectedDepartment || !selectedCourse}>
-                    <Users className="w-4 h-4 mr-2" />
-                    Load Students
-                  </Button>
-                </div>
-              </Card>
-
-              {attendanceSession && (
-                <>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <Card className="relative overflow-hidden">
-                      <div className="p-4">
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Present</p>
-                        <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.present}</p>
-                      </div>
-                      <div className="h-1 bg-gradient-to-r from-green-500 to-green-600" />
-                    </Card>
-                    <Card className="relative overflow-hidden">
-                      <div className="p-4">
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Absent</p>
-                        <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.absent}</p>
-                      </div>
-                      <div className="h-1 bg-gradient-to-r from-red-500 to-red-600" />
-                    </Card>
-                    <Card className="relative overflow-hidden">
-                      <div className="p-4">
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Late</p>
-                        <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.late}</p>
-                      </div>
-                      <div className="h-1 bg-gradient-to-r from-amber-500 to-amber-600" />
-                    </Card>
-                    <Card className="relative overflow-hidden">
-                      <div className="p-4">
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Excused</p>
-                        <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.excused}</p>
-                      </div>
-                      <div className="h-1 bg-gradient-to-r from-blue-500 to-blue-600" />
-                    </Card>
-                  </div>
-
-                  <Card>
-                    <div className="p-6">
-                      <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                          Student List
-                        </h2>
-                        <Button onClick={saveAttendance} isLoading={loading}>
-                          <Save className="w-4 h-4 mr-2" />
-                          Save Attendance
-                        </Button>
-                      </div>
-
-                      <div className="space-y-4">
-                        {attendanceSession.students.map((student, index) => (
-                          <motion.div
-                            key={student.id}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.05 }}
-                            className="bg-gray-50 dark:bg-dark-800/50 rounded-xl p-4 border border-gray-200 dark:border-dark-700"
-                          >
-                            <div className="flex flex-col md:flex-row md:items-center gap-4">
-                              <div className="flex-1">
-                                <h3 className="font-semibold text-gray-900 dark:text-white">
-                                  {student.name}
-                                </h3>
-                              </div>
-
-                              <div className="flex gap-2 flex-wrap">
-                                {(['present', 'absent', 'late', 'excused'] as const).map((status) => (
-                                  <Button
-                                    key={status}
-                                    size="sm"
-                                    variant={student.status === status ? 'primary' : 'secondary'}
-                                    onClick={() => updateAttendance(student.id, status)}
-                                  >
-                                    {status.charAt(0).toUpperCase() + status.slice(1)}
-                                  </Button>
-                                ))}
-                              </div>
-
-                              <input
-                                type="text"
-                                placeholder="Notes..."
-                                value={student.notes}
-                                onChange={(e) => updateNotes(student.id, e.target.value)}
-                                className="flex-1 md:max-w-xs px-3 py-2 bg-white dark:bg-dark-800 border border-gray-300 dark:border-dark-700 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white"
-                              />
-                            </div>
-                          </motion.div>
-                        ))}
-                      </div>
-                    </div>
-                  </Card>
-                </>
-              )}
-            </>
-          )}
-
-          {viewMode === 'history' && (
-            <Card>
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
-                    Attendance History
-                  </h2>
-                  <Button variant="secondary">
-                    <Download className="w-4 h-4 mr-2" />
-                    Export
-                  </Button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Filter by Department
-                    </label>
-                    <select
-                      value={selectedDepartment}
-                      onChange={(e) => setSelectedDepartment(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-white dark:bg-dark-800 border border-gray-300 dark:border-dark-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white"
-                    >
-                      <option value="">All Departments</option>
-                      {departments.map((dept) => (
-                        <option key={dept} value={dept}>
-                          {dept}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Filter by Course
-                    </label>
-                    <select
-                      value={selectedCourse}
-                      onChange={(e) => setSelectedCourse(e.target.value)}
-                      className="w-full px-4 py-2.5 bg-white dark:bg-dark-800 border border-gray-300 dark:border-dark-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white"
-                    >
-                      <option value="">All Courses</option>
-                      {selectedDepartment &&
-                        courses[selectedDepartment as keyof typeof courses]?.map((course) => (
-                          <option key={course} value={course}>
-                            {course}
-                          </option>
-                        ))}
-                    </select>
-                  </div>
-                </div>
-
-                <Table
-                  columns={historyColumns}
-                  data={records}
-                  keyExtractor={(row) => row.id}
-                  emptyMessage="No attendance records found"
-                />
-              </div>
-            </Card>
-          )}
-        </motion.div>
+    <div className="space-y-7">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="font-heading font-bold text-3xl text-ink-950 dark:text-dark-50 tracking-tight">Manage Attendance</h1>
+          <p className="text-ink-500 dark:text-dark-400 mt-1">Mark and review student attendance</p>
+        </div>
+        {canManage && <Button icon={<Plus size={16} />} onClick={() => { setForm(empty()); setOpen(true); }}>Mark Attendance</Button>}
       </div>
+
+      {rows === null ? (
+        <div className="py-16 flex justify-center"><div className="h-8 w-8 rounded-full border-4 border-primary-200 border-t-primary-600 animate-spin" /></div>
+      ) : rows.length === 0 ? (
+        <Card animated={false}><CardBody className="flex flex-col items-center py-14 text-center">
+          <ClipboardCheck className="w-10 h-10 text-ink-300 dark:text-dark-600 mb-3" />
+          <p className="text-sm text-ink-500 dark:text-dark-400">No attendance records yet.</p>
+        </CardBody></Card>
+      ) : (
+        <Card animated={false}><CardBody className="p-0 overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-ink-100 dark:border-dark-700 text-left text-xs uppercase text-ink-500 dark:text-dark-400">
+                <th className="py-3 px-5">Student</th><th className="py-3 px-5">Subject</th><th className="py-3 px-5">Date</th><th className="py-3 px-5">Status</th>
+                {canManage && <th className="py-3 px-5"></th>}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.id} className="border-b border-ink-50 dark:border-dark-800 hover:bg-paper-50 dark:hover:bg-dark-850">
+                  <td className="py-3 px-5 text-ink-900 dark:text-dark-100">{r.students?.users?.full_name ?? r.students?.roll_number ?? '—'}</td>
+                  <td className="py-3 px-5 font-medium text-ink-900 dark:text-dark-100">{r.subjects?.subject_name ?? '—'}</td>
+                  <td className="py-3 px-5 text-ink-600 dark:text-dark-300">{formatDate(r.date)}</td>
+                  <td className="py-3 px-5"><Badge variant={statusVariant(r.status)} size="sm">{r.status}</Badge></td>
+                  {canManage && (
+                    <td className="py-3 px-5 text-right">
+                      <button onClick={() => remove(r)} className="p-1.5 rounded-lg text-danger-500 hover:bg-danger-50 dark:hover:bg-danger-600/10"><Trash2 size={14} /></button>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </CardBody></Card>
+      )}
+
+      <Modal open={open} onClose={() => setOpen(false)} title="Mark Attendance">
+        <form onSubmit={save} className="space-y-4">
+          <Select label="Student" value={form.student_id} onChange={(e) => setForm({ ...form, student_id: e.target.value })}>
+            <option value="">— Select student —</option>
+            {students.map((s) => <option key={s.id} value={s.id}>{s.users?.full_name ?? s.roll_number} ({s.roll_number})</option>)}
+          </Select>
+          <Select label="Subject" value={form.subject_id} onChange={(e) => setForm({ ...form, subject_id: e.target.value })}>
+            <option value="">— Select subject —</option>
+            {subjects.map((s) => <option key={s.id} value={s.id}>{s.subject_name}</option>)}
+          </Select>
+          <div className="grid grid-cols-2 gap-4">
+            <Input label="Date" type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} fullWidth />
+            <Select label="Status" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
+              {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+            </Select>
+          </div>
+          <Input label="Remarks" value={form.remarks} onChange={(e) => setForm({ ...form, remarks: e.target.value })} placeholder="Optional" fullWidth />
+          <div className="flex gap-3 pt-2">
+            <Button type="button" variant="ghost" className="flex-1" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button type="submit" className="flex-1" isLoading={saving}>Save</Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

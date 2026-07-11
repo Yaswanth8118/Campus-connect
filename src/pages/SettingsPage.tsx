@@ -9,9 +9,11 @@ import Avatar from '../components/ui/Avatar';
 import Badge from '../components/ui/Badge';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { usersRepo } from '../services/entities';
+import { isSupabaseConfigured } from '../lib/supabase';
 
 export function SettingsPage() {
-  const { user, logout } = useAuthStore();
+  const { user, logout, refreshProfile } = useAuthStore();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -19,13 +21,30 @@ export function SettingsPage() {
     phone: user?.phone || '',
     profileImage: user?.profileImage || '',
   });
+  const [saving, setSaving] = useState(false);
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success('Profile updated successfully');
+    if (!user) return;
+    setSaving(true);
+    try {
+      if (isSupabaseConfigured()) {
+        await usersRepo.update(user.id, {
+          full_name: formData.name,
+          phone: formData.phone,
+          profile_image: formData.profileImage,
+        });
+        await refreshProfile();
+      }
+      toast.success('Profile updated successfully');
+    } catch {
+      toast.error('Failed to update profile');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDeleteAccount = async () => {
@@ -45,8 +64,8 @@ export function SettingsPage() {
   const roleLabel =
     user?.role === 'student'
       ? 'Student'
-      : user?.role === 'team_leader'
-        ? 'Team Leader'
+      : user?.role === 'faculty'
+        ? 'Faculty'
         : user?.role
           ? user.role.charAt(0).toUpperCase() + user.role.slice(1)
           : '';
@@ -56,7 +75,7 @@ export function SettingsPage() {
       ? 'danger'
       : user?.role === 'coordinator'
         ? 'primary'
-        : user?.role === 'team_leader'
+        : user?.role === 'faculty'
           ? 'accent'
           : 'success'
   ) as 'danger' | 'primary' | 'accent' | 'success';
@@ -164,7 +183,7 @@ export function SettingsPage() {
               )}
 
               <div className="flex justify-end pt-1">
-                <Button type="submit" icon={<Save size={16} />}>
+                <Button type="submit" icon={<Save size={16} />} isLoading={saving}>
                   Save Changes
                 </Button>
               </div>

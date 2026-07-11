@@ -9,7 +9,7 @@ import Button from '../components/ui/Button';
 import ThemeToggle from '../components/ui/ThemeToggle';
 
 const features = [
-  { icon: Shield,        title: 'Role-Based Access',  desc: 'Dedicated views for Admins, Coordinators, Team Leaders, and Students.' },
+  { icon: Shield,        title: 'Role-Based Access',  desc: 'Dedicated views for Admins, Coordinators, Faculty, and Students.' },
   { icon: MessageSquare, title: 'Real-time Chat',     desc: 'Instant messaging in collaboration rooms with media sharing.' },
   { icon: Calendar,      title: 'Event Management',   desc: 'Create, schedule, and broadcast live events with real-time attendance.' },
   { icon: BookOpen,      title: 'Academic Tools',     desc: 'Assignments, grades, and attendance tracking for campus workflows.' },
@@ -195,7 +195,7 @@ const LandingPage: React.FC = () => {
           >
             {[
               { role: 'Student',      color: 'from-success-500 to-success-600', icon: GraduationCap, desc: 'Grades, assignments, attendance & events' },
-              { role: 'Team Leader',   color: 'from-accent-500 to-accent-600',  icon: UsersRound,    desc: 'Coordinate teams, manage task rooms' },
+              { role: 'Faculty',   color: 'from-accent-500 to-accent-600',  icon: UsersRound,    desc: 'Coordinate teams, manage task rooms' },
               { role: 'Coordinator',   color: 'from-primary-600 to-primary-700',icon: Users,         desc: 'Departments, reports & event oversight' },
               { role: 'Admin',         color: 'from-danger-500 to-danger-600',  icon: Shield,        desc: 'Full platform control & user management' },
             ].map((r, i) => (

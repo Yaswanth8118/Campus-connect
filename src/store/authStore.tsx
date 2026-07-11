@@ -7,10 +7,9 @@ import {
   signInWithPassword,
   signUp as supabaseSignUp,
   signOut as supabaseSignOut,
-  getSessionUser,
   clearSession,
+  restoreSession,
   dbSelect,
-  dbUpsert,
 } from '../lib/supabase';
 
 const emailSchema = z.string().email('Please enter a valid email address');
@@ -31,8 +30,8 @@ const mockUsers: Record<string, { user: User; password: string }> = {
     user: { id: '2', email: 'coordinator@campus.edu', name: 'Prof. Michael Chen', role: 'coordinator', profileImage: 'https://images.pexels.com/photos/1516680/pexels-photo-1516680.jpeg', phone: '+1234567891', department: 'Student Affairs', isVerified: true, createdAt: new Date().toISOString() },
     password: 'Coord@123',
   },
-  'teamlead@campus.edu': {
-    user: { id: '3', email: 'teamlead@campus.edu', name: 'Alex Rivera', role: 'team_leader', profileImage: 'https://images.pexels.com/photos/3777943/pexels-photo-3777943.jpeg', phone: '+1234567892', department: 'Computer Science', isVerified: true, createdAt: new Date().toISOString() },
+  'faculty@campus.edu': {
+    user: { id: '3', email: 'faculty@campus.edu', name: 'Alex Rivera', role: 'faculty', profileImage: 'https://images.pexels.com/photos/3777943/pexels-photo-3777943.jpeg', phone: '+1234567892', department: 'Computer Science', isVerified: true, createdAt: new Date().toISOString() },
     password: 'Lead@1234',
   },
   'student@campus.edu': {
@@ -41,26 +40,48 @@ const mockUsers: Record<string, { user: User; password: string }> = {
   },
 };
 
-const initialState: AuthState = { user: null, isAuthenticated: false, isLoading: false, error: null };
+const initialState: AuthState = {
+  user: null,
+  isAuthenticated: false,
+  isLoading: false,
+  initializing: true,
+  error: null,
+};
 
-async function fetchProfile(userId: string): Promise<Partial<User> | null> {
+// PostgREST returns an embedded to-one as an object, but be defensive about arrays.
+function embedOne(v: any): any {
+  return Array.isArray(v) ? v[0] : v;
+}
+
+function mapProfile(p: any): User {
+  const role = embedOne(p.roles)?.role_name;
+  const dept = embedOne(p.departments)?.department_name;
+  return {
+    id: p.id,
+    email: p.email,
+    name: p.full_name,
+    role: (role ?? 'student') as UserRole,
+    profileImage: p.profile_image,
+    phone: p.phone,
+    department: dept ?? '',
+    isVerified: p.status === 'active',
+    createdAt: p.created_at,
+  };
+}
+
+// Returns the raw `users` row (joined to roles/departments) for an auth uid.
+// NOTE: `departments` is embedded via the explicit FK hint because there are two
+// relationships between users<->departments (users.department_id and
+// departments.hod_id). Without the hint PostgREST throws an ambiguity error and
+// the whole profile fetch fails — which would silently fall back to a stale role.
+async function fetchProfileRow(authUserId: string): Promise<any | null> {
   try {
-    const rows = await dbSelect('profiles', `id=eq.${userId}&select=*`);
-    if (rows.length > 0) {
-      const p = rows[0];
-      return {
-        id: p.id,
-        email: p.email,
-        name: p.name,
-        role: p.role as UserRole,
-        profileImage: p.profile_image,
-        phone: p.phone,
-        department: p.department,
-        isVerified: p.is_verified,
-        createdAt: p.created_at,
-      };
-    }
-    return null;
+    const rows = await dbSelect(
+      'users',
+      `auth_user_id=eq.${authUserId}&select=id,email,full_name,phone,profile_image,status,created_at,` +
+        `roles!users_role_id_fkey(role_name),departments!users_department_id_fkey(department_name)`
+    );
+    return rows[0] ?? null;
   } catch {
     return null;
   }
@@ -68,6 +89,7 @@ async function fetchProfile(userId: string): Promise<Partial<User> | null> {
 
 export const useAuthStore = create<
   AuthState & {
+    initialize: () => Promise<void>;
     login: (email: string, password: string) => Promise<void>;
     register: (data: { email: string; password: string; name: string; role: UserRole; department?: string; phone?: string }) => Promise<void>;
     logout: () => void;
@@ -76,6 +98,54 @@ export const useAuthStore = create<
   }
 >((set, get) => ({
   ...initialState,
+
+  // Restore a persisted session on app startup. Called once from <App>.
+  // Guarantees `initializing` ends false so protected routes stop showing the loader.
+  initialize: async () => {
+    if (!isSupabaseConfigured()) {
+      set({ initializing: false });
+      return;
+    }
+    try {
+      const session = await restoreSession(); // refreshes transparently if expired
+      if (!session) {
+        clearSession();
+        set({ user: null, isAuthenticated: false, initializing: false });
+        return;
+      }
+
+      const row = await fetchProfileRow(session.user.id);
+
+      // Account exists but is deactivated → deny access.
+      if (row && row.status !== 'active') {
+        clearSession();
+        set({ user: null, isAuthenticated: false, initializing: false });
+        return;
+      }
+
+      const meta = session.user.user_metadata || {};
+      const user: User = row
+        ? mapProfile(row)
+        : {
+            // Session valid but profile row not found yet (e.g. trigger lag) —
+            // fall back to session metadata rather than logging the user out.
+            id: session.user.id,
+            email: session.user.email,
+            name: meta.full_name || meta.name || session.user.email.split('@')[0],
+            role: (meta.role || 'student') as UserRole,
+            profileImage: meta.profile_image || '',
+            phone: meta.phone || '',
+            department: meta.department || '',
+            isVerified: !!session.user.email_confirmed_at,
+            createdAt: session.user.created_at,
+          };
+
+      set({ user, isAuthenticated: true, initializing: false });
+    } catch {
+      // Any unexpected failure → treat as unauthenticated, never hang the loader.
+      set({ user: null, isAuthenticated: false, initializing: false });
+    }
+  },
 
   login: async (email, password) => {
     set({ isLoading: true, error: null });
@@ -86,20 +156,28 @@ export const useAuthStore = create<
       if (isSupabaseConfigured()) {
         try {
           const session = await signInWithPassword(lowerEmail, password);
-          const profile = await fetchProfile(session.user.id);
+          const row = await fetchProfileRow(session.user.id);
+
+          if (row && row.status !== 'active') {
+            clearSession();
+            throw new Error('Your account is inactive. Contact an administrator.');
+          }
+
           const meta = session.user.user_metadata || {};
-          const user: User = {
-            id: session.user.id,
-            email: session.user.email,
-            name: profile?.name || meta.name || lowerEmail.split('@')[0],
-            role: (profile?.role || meta.role || 'student') as UserRole,
-            profileImage: profile?.profileImage || meta.profile_image,
-            phone: profile?.phone || meta.phone || '',
-            department: profile?.department || meta.department || '',
-            isVerified: !!session.user.email_confirmed_at,
-            createdAt: session.user.created_at,
-          };
-          set({ user, isAuthenticated: true, isLoading: false });
+          const user: User = row
+            ? mapProfile(row)
+            : {
+                id: session.user.id,
+                email: session.user.email,
+                name: meta.full_name || meta.name || lowerEmail.split('@')[0],
+                role: (meta.role || 'student') as UserRole,
+                profileImage: meta.profile_image || '',
+                phone: meta.phone || '',
+                department: meta.department || '',
+                isVerified: !!session.user.email_confirmed_at,
+                createdAt: session.user.created_at,
+              };
+          set({ user, isAuthenticated: true, isLoading: false, initializing: false });
           toast.success(`Welcome back, ${user.name}!`);
           return;
         } catch (err: any) {
@@ -107,11 +185,11 @@ export const useAuthStore = create<
         }
       }
 
-      // Fallback: mock users for demo
+      // Fallback: mock users for local dev without Supabase configured
       await new Promise((r) => setTimeout(r, 600));
       const mock = mockUsers[lowerEmail];
       if (mock && mock.password === password) {
-        set({ user: mock.user, isAuthenticated: true, isLoading: false });
+        set({ user: mock.user, isAuthenticated: true, isLoading: false, initializing: false });
         toast.success(`Welcome back, ${mock.user.name}!`);
         return;
       }
@@ -150,7 +228,7 @@ export const useAuthStore = create<
           isVerified: !!session.user.email_confirmed_at,
           createdAt: new Date().toISOString(),
         };
-        set({ user, isAuthenticated: true, isLoading: false });
+        set({ user, isAuthenticated: true, isLoading: false, initializing: false });
         toast.success('Account created successfully!');
         return;
       }
@@ -167,7 +245,7 @@ export const useAuthStore = create<
         isVerified: true,
         createdAt: new Date().toISOString(),
       };
-      set({ user, isAuthenticated: true, isLoading: false });
+      set({ user, isAuthenticated: true, isLoading: false, initializing: false });
       toast.success('Account created successfully!');
     } catch (error) {
       const msg = error instanceof z.ZodError ? error.errors[0].message : error instanceof Error ? error.message : 'Registration failed';
@@ -179,18 +257,16 @@ export const useAuthStore = create<
   logout: () => {
     supabaseSignOut().catch(() => {});
     clearSession();
-    set({ ...initialState });
+    set({ ...initialState, initializing: false });
     toast.success('Signed out successfully');
   },
 
-  resetAuth: () => set(initialState),
+  resetAuth: () => set({ ...initialState, initializing: false }),
 
   refreshProfile: async () => {
     const currentUser = get().user;
     if (!currentUser || !isSupabaseConfigured()) return;
-    const profile = await fetchProfile(currentUser.id);
-    if (profile) {
-      set({ user: { ...currentUser, ...profile } });
-    }
+    const row = await fetchProfileRow(currentUser.id);
+    if (row) set({ user: mapProfile(row) });
   },
 }));

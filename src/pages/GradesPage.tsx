@@ -1,420 +1,175 @@
 import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Award, TrendingUp, BookOpen, Plus, Edit2, Trash2, X } from 'lucide-react';
-import { useAcademicStore } from '../store/academicStore';
+import { motion } from 'framer-motion';
+import { Award, Plus, Edit2, Trash2, TrendingUp } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
-import { Card } from '../components/ui/Card';
-import { Badge } from '../components/ui/Badge';
-import { Table, TableColumn } from '../components/ui/Table';
+import { Card, CardBody } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
+import Badge from '../components/ui/Badge';
+import Modal, { Select } from '../components/ui/Modal';
 import toast from 'react-hot-toast';
+import {
+  gradesRepo, gradesWithNames, studentsWithUser, subjectsWithNames, myFacultyId, DBGrade,
+} from '../services/entities';
 
-interface Grade {
-  id: string;
-  student_id: string;
-  subject: string;
-  score: number;
-  max_score: number;
-  grade_letter: string;
-  semester: string;
-  comments?: string;
-  graded_by?: string;
-  created_at: string;
-}
+const GRADES = ['A+', 'A', 'B', 'C', 'D', 'E', 'F'];
+const empty = { student_id: '', subject_id: '', internal_marks: 0, external_marks: 0, assignment_marks: 0, lab_marks: 0, final_grade: 'A', cgpa: 0 };
+const gradeVariant = (g: string) => (['A+', 'A'].includes(g) ? 'success' : ['B', 'C'].includes(g) ? 'primary' : g === 'D' ? 'warning' : 'danger') as any;
 
 export function GradesPage() {
   const { user } = useAuthStore();
-  const { grades, isLoading, fetchGrades } = useAcademicStore();
-  const [showModal, setShowModal] = useState(false);
-  const [editingGrade, setEditingGrade] = useState<Grade | null>(null);
-  const [formData, setFormData] = useState({
-    student_id: '',
-    subject: '',
-    score: '',
-    max_score: '100',
-    grade_letter: 'A',
-    semester: '',
-    comments: '',
-  });
-
-  const isFaculty = user?.role === 'coordinator' || user?.role === 'admin';
+  const canManage = user?.role === 'admin' || user?.role === 'faculty';
   const isStudent = user?.role === 'student';
+  const [rows, setRows] = useState<any[] | null>(null);
+  const [students, setStudents] = useState<any[]>([]);
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<any | null>(null);
+  const [form, setForm] = useState<any>(empty);
+  const [saving, setSaving] = useState(false);
 
+  const load = () => gradesWithNames('&order=updated_at.desc').then(setRows).catch(() => setRows([]));
   useEffect(() => {
-    if (user?.id) {
-      fetchGrades(user.id);
+    load();
+    if (canManage) {
+      studentsWithUser().then(setStudents).catch(() => setStudents([]));
+      subjectsWithNames().then(setSubjects).catch(() => setSubjects([]));
     }
-  }, [fetchGrades, user]);
+  }, [canManage]);
 
-  const calculateOverallGPA = () => {
-    if (grades.length === 0) return 0;
-    const gradePoints: Record<string, number> = { A: 4.0, B: 3.0, C: 2.0, D: 1.0, F: 0.0 };
-    const totalPoints = grades.reduce((acc, grade) => acc + (gradePoints[grade.grade_letter] || 0), 0);
-    return (totalPoints / grades.length).toFixed(2);
+  const openCreate = () => { setEditing(null); setForm(empty); setOpen(true); };
+  const openEdit = (g: DBGrade) => {
+    setEditing(g);
+    setForm({ student_id: g.student_id, subject_id: g.subject_id, internal_marks: g.internal_marks, external_marks: g.external_marks, assignment_marks: g.assignment_marks, lab_marks: g.lab_marks, final_grade: g.final_grade || 'A', cgpa: g.cgpa });
+    setOpen(true);
   };
 
-  const calculateAverageScore = () => {
-    if (grades.length === 0) return 0;
-    const totalPercentage = grades.reduce((acc, grade) => acc + (grade.score / grade.max_score) * 100, 0);
-    return Math.round(totalPercentage / grades.length);
-  };
-
-  const getGradeColor = (letter: string) => {
-    const colors: Record<string, string> = {
-      A: 'success',
-      B: 'primary',
-      C: 'warning',
-      D: 'secondary',
-      F: 'danger',
-    };
-    return colors[letter] || 'secondary';
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const save = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success(editingGrade ? 'Grade updated successfully!' : 'Grade created successfully!');
-    setShowModal(false);
-    resetForm();
+    if (!form.student_id || !form.subject_id) { toast.error('Student and subject are required'); return; }
+    setSaving(true);
+    try {
+      const faculty_id = user?.role === 'faculty' ? await myFacultyId(user.id) : null;
+      const num = (v: any) => Number(v) || 0;
+      const payload = {
+        student_id: form.student_id, subject_id: form.subject_id,
+        internal_marks: num(form.internal_marks), external_marks: num(form.external_marks),
+        assignment_marks: num(form.assignment_marks), lab_marks: num(form.lab_marks),
+        final_grade: form.final_grade, cgpa: num(form.cgpa),
+        ...(faculty_id ? { faculty_id } : {}),
+      };
+      if (editing) await gradesRepo.update(editing.id, payload);
+      else await gradesRepo.create(payload);
+      toast.success(editing ? 'Grade updated' : 'Grade recorded');
+      setOpen(false);
+      load();
+    } catch { toast.error('Save failed — check your permissions'); }
+    finally { setSaving(false); }
   };
 
-  const handleEdit = (grade: Grade) => {
-    setEditingGrade(grade);
-    setFormData({
-      student_id: grade.student_id,
-      subject: grade.subject,
-      score: grade.score.toString(),
-      max_score: grade.max_score.toString(),
-      grade_letter: grade.grade_letter,
-      semester: grade.semester,
-      comments: grade.comments || '',
-    });
-    setShowModal(true);
+  const remove = async (g: DBGrade) => {
+    if (!confirm('Delete this grade record?')) return;
+    try { await gradesRepo.remove(g.id); toast.success('Deleted'); load(); }
+    catch { toast.error('Delete failed'); }
   };
 
-  const handleDelete = async (gradeId: string) => {
-    if (confirm('Are you sure you want to delete this grade?')) {
-      toast.success('Grade deleted successfully!');
-    }
-  };
-
-  const resetForm = () => {
-    setFormData({
-      student_id: '',
-      subject: '',
-      score: '',
-      max_score: '100',
-      grade_letter: 'A',
-      semester: '',
-      comments: '',
-    });
-    setEditingGrade(null);
-  };
-
-  const gpa = calculateOverallGPA();
-  const avgScore = calculateAverageScore();
-
-  const statsCards = [
-    {
-      title: 'Overall GPA',
-      value: gpa,
-      icon: Award,
-      gradient: 'from-blue-500 to-blue-600',
-    },
-    {
-      title: 'Average Score',
-      value: `${avgScore}%`,
-      icon: TrendingUp,
-      gradient: 'from-green-500 to-green-600',
-    },
-    {
-      title: 'Completed Courses',
-      value: grades.length,
-      icon: BookOpen,
-      gradient: 'from-amber-500 to-amber-600',
-    },
-  ];
-
-  const columns: TableColumn<Grade>[] = [
-    {
-      key: 'subject',
-      label: 'Subject',
-      sortable: true,
-      render: (value) => (
-        <span className="font-semibold text-gray-900 dark:text-white">{value}</span>
-      ),
-    },
-    {
-      key: 'semester',
-      label: 'Semester',
-      sortable: true,
-    },
-    {
-      key: 'score',
-      label: 'Score',
-      sortable: true,
-      render: (value, row) => (
-        <span className="font-medium">
-          {value} / {row.max_score}
-        </span>
-      ),
-    },
-    {
-      key: 'grade_letter',
-      label: 'Grade',
-      sortable: true,
-      render: (value) => (
-        <Badge variant={getGradeColor(value) as any}>
-          {value}
-        </Badge>
-      ),
-    },
-    {
-      key: 'created_at',
-      label: 'Date',
-      sortable: true,
-      render: (value) => new Date(value).toLocaleDateString(),
-    },
-  ];
-
-  if (isFaculty) {
-    columns.push({
-      key: 'id',
-      label: 'Actions',
-      width: '150px',
-      render: (_, row) => (
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={() => handleEdit(row)}
-          >
-            <Edit2 className="w-4 h-4" />
-          </Button>
-          <Button
-            size="sm"
-            variant="danger"
-            onClick={() => handleDelete(row.id)}
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
-        </div>
-      ),
-    });
-  }
+  const avgCgpa = rows && rows.length ? (rows.reduce((a, g) => a + Number(g.cgpa || 0), 0) / rows.length).toFixed(2) : '—';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-50 to-white dark:from-slate-900 dark:via-slate-850 dark:to-slate-900 p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
-              {isStudent ? 'My Grades' : 'Grade Management'}
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-2">
-              {isStudent ? 'View your academic performance' : 'Manage student grades and performance'}
-            </p>
-          </div>
-          {isFaculty && (
-            <Button onClick={() => setShowModal(true)}>
-              <Plus className="w-5 h-5 mr-2" />
-              Add Grade
-            </Button>
-          )}
+    <div className="space-y-7">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="font-heading font-bold text-3xl text-ink-950 dark:text-dark-50 tracking-tight">{isStudent ? 'My Grades' : 'Grade Book'}</h1>
+          <p className="text-ink-500 dark:text-dark-400 mt-1">{isStudent ? 'Your academic performance' : 'Record and manage student grades'}</p>
         </div>
-
-        {isLoading ? (
-          <div className="flex justify-center items-center h-64">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-              className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full"
-            />
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              {statsCards.map((stat, index) => (
-                <motion.div
-                  key={stat.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: index * 0.1 }}
-                >
-                  <Card className="relative overflow-hidden">
-                    <div className="flex items-center justify-between p-6">
-                      <div>
-                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
-                          {stat.title}
-                        </p>
-                        <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                          {stat.value}
-                        </p>
-                      </div>
-                      <div className={`p-4 rounded-2xl bg-gradient-to-br ${stat.gradient} shadow-lg`}>
-                        <stat.icon size={28} className="text-white" />
-                      </div>
-                    </div>
-                    <div className={`h-1 bg-gradient-to-r ${stat.gradient}`} />
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-
-            <Card>
-              <div className="p-6">
-                <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6">
-                  Grade Records
-                </h2>
-                <Table
-                  columns={columns}
-                  data={grades}
-                  keyExtractor={(row) => row.id}
-                  emptyMessage="No grades available"
-                />
-              </div>
-            </Card>
-          </>
-        )}
-
-        <AnimatePresence>
-          {showModal && isFaculty && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-              onClick={() => {
-                setShowModal(false);
-                resetForm();
-              }}
-            >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                onClick={(e) => e.stopPropagation()}
-                className="bg-white/95 dark:bg-dark-900/95 backdrop-blur-xl rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-white/20 dark:border-dark-700/50"
-              >
-                <div className="p-6 border-b border-gray-200 dark:border-dark-700 flex justify-between items-center sticky top-0 bg-white/95 dark:bg-dark-900/95 backdrop-blur-xl z-10">
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {editingGrade ? 'Edit Grade' : 'Add New Grade'}
-                  </h2>
-                  <button
-                    onClick={() => {
-                      setShowModal(false);
-                      resetForm();
-                    }}
-                    className="p-2 hover:bg-gray-100 dark:hover:bg-dark-800 rounded-lg transition-colors"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-
-                <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Subject *
-                      </label>
-                      <Input
-                        value={formData.subject}
-                        onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                        placeholder="e.g., Mathematics"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Semester *
-                      </label>
-                      <Input
-                        value={formData.semester}
-                        onChange={(e) => setFormData({ ...formData, semester: e.target.value })}
-                        placeholder="e.g., Fall 2025"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Score *
-                      </label>
-                      <Input
-                        type="number"
-                        value={formData.score}
-                        onChange={(e) => setFormData({ ...formData, score: e.target.value })}
-                        placeholder="e.g., 85"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Max Score *
-                      </label>
-                      <Input
-                        type="number"
-                        value={formData.max_score}
-                        onChange={(e) => setFormData({ ...formData, max_score: e.target.value })}
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Grade Letter *
-                      </label>
-                      <select
-                        value={formData.grade_letter}
-                        onChange={(e) => setFormData({ ...formData, grade_letter: e.target.value })}
-                        className="w-full px-4 py-2.5 bg-white dark:bg-dark-800 border border-gray-300 dark:border-dark-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white"
-                        required
-                      >
-                        <option value="A">A</option>
-                        <option value="B">B</option>
-                        <option value="C">C</option>
-                        <option value="D">D</option>
-                        <option value="F">F</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Comments
-                    </label>
-                    <textarea
-                      value={formData.comments}
-                      onChange={(e) => setFormData({ ...formData, comments: e.target.value })}
-                      placeholder="Add comments or feedback..."
-                      rows={3}
-                      className="w-full px-4 py-2.5 bg-white dark:bg-dark-800 border border-gray-300 dark:border-dark-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white resize-none"
-                    />
-                  </div>
-
-                  <div className="flex gap-3 pt-4">
-                    <Button type="submit" className="flex-1">
-                      {editingGrade ? 'Update Grade' : 'Create Grade'}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={() => {
-                        setShowModal(false);
-                        resetForm();
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </form>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {canManage && <Button icon={<Plus size={16} />} onClick={openCreate}>Add Grade</Button>}
       </div>
+
+      {isStudent && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <div className="rounded-2xl p-5 bg-gradient-to-br from-gold-500 to-gold-600 text-white">
+            <p className="text-xs uppercase opacity-80">Average CGPA</p>
+            <p className="text-2xl font-heading font-bold mt-1">{avgCgpa}</p>
+          </div>
+          <div className="rounded-2xl p-5 bg-gradient-to-br from-primary-600 to-primary-700 text-white">
+            <p className="text-xs uppercase opacity-80">Subjects</p>
+            <p className="text-2xl font-heading font-bold mt-1">{rows?.length ?? '—'}</p>
+          </div>
+        </div>
+      )}
+
+      {rows === null ? (
+        <div className="py-16 flex justify-center"><div className="h-8 w-8 rounded-full border-4 border-primary-200 border-t-primary-600 animate-spin" /></div>
+      ) : rows.length === 0 ? (
+        <Card animated={false}><CardBody className="flex flex-col items-center py-14 text-center">
+          <Award className="w-10 h-10 text-ink-300 dark:text-dark-600 mb-3" />
+          <p className="text-sm text-ink-500 dark:text-dark-400">No grades recorded yet.</p>
+        </CardBody></Card>
+      ) : (
+        <Card animated={false}><CardBody className="p-0 overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-ink-100 dark:border-dark-700 text-left text-xs uppercase text-ink-500 dark:text-dark-400">
+                {!isStudent && <th className="py-3 px-5">Student</th>}
+                <th className="py-3 px-5">Subject</th>
+                <th className="py-3 px-3">Int</th><th className="py-3 px-3">Ext</th>
+                <th className="py-3 px-3">Asg</th><th className="py-3 px-3">Lab</th>
+                <th className="py-3 px-3">Grade</th><th className="py-3 px-3">CGPA</th>
+                {canManage && <th className="py-3 px-5"></th>}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((g) => (
+                <tr key={g.id} className="border-b border-ink-50 dark:border-dark-800 hover:bg-paper-50 dark:hover:bg-dark-850">
+                  {!isStudent && <td className="py-3 px-5 text-ink-900 dark:text-dark-100">{g.students?.users?.full_name ?? g.students?.roll_number ?? '—'}</td>}
+                  <td className="py-3 px-5 font-medium text-ink-900 dark:text-dark-100">{g.subjects?.subject_name ?? '—'}</td>
+                  <td className="py-3 px-3 text-ink-600 dark:text-dark-300">{g.internal_marks}</td>
+                  <td className="py-3 px-3 text-ink-600 dark:text-dark-300">{g.external_marks}</td>
+                  <td className="py-3 px-3 text-ink-600 dark:text-dark-300">{g.assignment_marks}</td>
+                  <td className="py-3 px-3 text-ink-600 dark:text-dark-300">{g.lab_marks}</td>
+                  <td className="py-3 px-3"><Badge variant={gradeVariant(g.final_grade)} size="sm">{g.final_grade || '—'}</Badge></td>
+                  <td className="py-3 px-3 font-semibold text-ink-900 dark:text-dark-100">{g.cgpa}</td>
+                  {canManage && (
+                    <td className="py-3 px-5">
+                      <div className="flex gap-1 justify-end">
+                        <button onClick={() => openEdit(g)} className="p-1.5 rounded-lg text-ink-400 hover:bg-ink-100 dark:hover:bg-dark-700"><Edit2 size={14} /></button>
+                        <button onClick={() => remove(g)} className="p-1.5 rounded-lg text-danger-500 hover:bg-danger-50 dark:hover:bg-danger-600/10"><Trash2 size={14} /></button>
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </CardBody></Card>
+      )}
+
+      <Modal open={open} onClose={() => setOpen(false)} title={editing ? 'Edit Grade' : 'Add Grade'}>
+        <form onSubmit={save} className="space-y-4">
+          <Select label="Student" value={form.student_id} onChange={(e) => setForm({ ...form, student_id: e.target.value })}>
+            <option value="">— Select student —</option>
+            {students.map((s) => <option key={s.id} value={s.id}>{s.users?.full_name ?? s.roll_number} ({s.roll_number})</option>)}
+          </Select>
+          <Select label="Subject" value={form.subject_id} onChange={(e) => setForm({ ...form, subject_id: e.target.value })}>
+            <option value="">— Select subject —</option>
+            {subjects.map((s) => <option key={s.id} value={s.id}>{s.subject_name}</option>)}
+          </Select>
+          <div className="grid grid-cols-2 gap-4">
+            <Input label="Internal" type="number" value={form.internal_marks} onChange={(e) => setForm({ ...form, internal_marks: e.target.value })} fullWidth />
+            <Input label="External" type="number" value={form.external_marks} onChange={(e) => setForm({ ...form, external_marks: e.target.value })} fullWidth />
+            <Input label="Assignment" type="number" value={form.assignment_marks} onChange={(e) => setForm({ ...form, assignment_marks: e.target.value })} fullWidth />
+            <Input label="Lab" type="number" value={form.lab_marks} onChange={(e) => setForm({ ...form, lab_marks: e.target.value })} fullWidth />
+            <Select label="Final Grade" value={form.final_grade} onChange={(e) => setForm({ ...form, final_grade: e.target.value })}>
+              {GRADES.map((g) => <option key={g} value={g}>{g}</option>)}
+            </Select>
+            <Input label="CGPA" type="number" step="0.01" value={form.cgpa} onChange={(e) => setForm({ ...form, cgpa: e.target.value })} fullWidth />
+          </div>
+          <div className="flex gap-3 pt-2">
+            <Button type="button" variant="ghost" className="flex-1" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button type="submit" className="flex-1" isLoading={saving}>{editing ? 'Save Changes' : 'Record'}</Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

@@ -191,9 +191,9 @@ const AuthForm: React.FC = () => {
                 }
                 className="w-full px-4 py-2.5 text-sm bg-white dark:bg-dark-900 border border-ink-200 dark:border-dark-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 dark:focus:border-primary-400 text-ink-950 dark:text-dark-100 transition-all"
               >
-                <option value="student">Student / Participant</option>
-                <option value="team_leader">Team Leader</option>
-                <option value="coordinator">Faculty / Coordinator</option>
+                <option value="student">Student</option>
+                <option value="faculty">Faculty</option>
+                <option value="coordinator">Coordinator</option>
               </select>
             </div>
 
@@ -289,7 +289,7 @@ const AuthForm: React.FC = () => {
           {[
             { role: 'Admin', email: 'admin@campus.edu', pw: 'Admin@123' },
             { role: 'Coordinator', email: 'coordinator@campus.edu', pw: 'Coord@123' },
-            { role: 'Team Leader', email: 'teamlead@campus.edu', pw: 'Lead@1234' },
+            { role: 'Faculty', email: 'faculty@campus.edu', pw: 'Lead@1234' },
             { role: 'Student', email: 'student@campus.edu', pw: 'Student@1' },
           ].map((a) => (
             <button
