@@ -275,44 +275,48 @@ const AuthForm: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Demo accounts */}
-      <motion.div
-        className="mt-7 p-4 bg-paper-100 dark:bg-dark-900/60 rounded-2xl border border-paper-200 dark:border-dark-700/40"
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-      >
-        <p className="text-xs font-heading font-semibold text-ink-900 dark:text-dark-200 mb-2.5">
-          Demo Accounts
-        </p>
-        <div className="grid grid-cols-2 gap-2 text-xs">
-          {[
-            { role: 'Admin', email: 'admin@campus.edu', pw: 'Admin@123' },
-            { role: 'Coordinator', email: 'coordinator@campus.edu', pw: 'Coord@123' },
-            { role: 'Faculty', email: 'faculty@campus.edu', pw: 'Lead@1234' },
-            { role: 'Student', email: 'student@campus.edu', pw: 'Student@1' },
-          ].map((a) => (
-            <button
-              key={a.role}
-              type="button"
-              onClick={() => {
-                setEmail(a.email);
-                setPassword(a.pw);
-                setIsSignUp(false);
-              }}
-              className="text-left p-2 rounded-xl bg-white/60 dark:bg-dark-800/60 hover:bg-white dark:hover:bg-dark-800 border border-paper-200/60 dark:border-dark-600/40 transition-all hover:border-primary-300 dark:hover:border-primary-600 group"
-            >
-              <p className="font-semibold text-primary-700 dark:text-primary-400 group-hover:text-primary-600 transition-colors">
-                {a.role}
-              </p>
-              <p className="text-ink-500 dark:text-dark-500 truncate">{a.email}</p>
-            </button>
-          ))}
-        </div>
-        <p className="mt-2.5 text-xs text-ink-500 dark:text-dark-500">
-          Passwords shown on hover. Click to auto-fill.
-        </p>
-      </motion.div>
+      {!isSignUp && (
+        <>
+          {/* Demo accounts */}
+          <motion.div
+            className="mt-7 p-4 bg-paper-100 dark:bg-dark-900/60 rounded-2xl border border-paper-200 dark:border-dark-700/40"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <p className="text-xs font-heading font-semibold text-ink-900 dark:text-dark-200 mb-2.5">
+              Demo Accounts
+            </p>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              {[
+                { role: 'Admin', email: 'admin@campus.edu', pw: 'Admin@123' },
+                { role: 'Coordinator', email: 'coordinator@campus.edu', pw: 'Coord@123' },
+                { role: 'Faculty', email: 'faculty@campus.edu', pw: 'Lead@1234' },
+                { role: 'Student', email: 'student@campus.edu', pw: 'Student@1' },
+              ].map((a) => (
+                <button
+                  key={a.role}
+                  type="button"
+                  onClick={() => {
+                    setEmail(a.email);
+                    setPassword(a.pw);
+                    setIsSignUp(false);
+                  }}
+                  className="text-left p-2 rounded-xl bg-white/60 dark:bg-dark-800/60 hover:bg-white dark:hover:bg-dark-800 border border-paper-200/60 dark:border-dark-600/40 transition-all hover:border-primary-300 dark:hover:border-primary-600 group"
+                >
+                  <p className="font-semibold text-primary-700 dark:text-primary-400 group-hover:text-primary-600 transition-colors">
+                    {a.role}
+                  </p>
+                  <p className="text-ink-500 dark:text-dark-500 truncate">{a.email}</p>
+                </button>
+              ))}
+            </div>
+            <p className="mt-2.5 text-xs text-ink-500 dark:text-dark-500">
+              Passwords shown on hover. Click to auto-fill.
+            </p>
+          </motion.div>
+        </>
+      )}
     </div>
   );
 };
