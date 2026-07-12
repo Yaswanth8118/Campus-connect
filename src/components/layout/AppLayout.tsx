@@ -31,7 +31,7 @@ const AppLayout: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-paper-50/50 dark:bg-dark-900">
+    <div className="min-h-screen bg-paper-100 dark:bg-dark-900">
       <Header onMenuClick={() => setIsMobileSidebarOpen(true)} />
       <div className="flex pt-16">
         <Sidebar

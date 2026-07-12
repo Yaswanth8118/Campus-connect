@@ -12,6 +12,18 @@
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Warm ivory daylight canvas — cards float above this in light theme */
+    background-color: #f7f4ee;
+    color: #2c2823;
+  }
+  .dark body {
+    background-color: #171413;
+    color: #e8e4e0;
+  }
+
+  /* Headings: refined tracking for a premium editorial feel */
+  h1, h2, h3, .font-heading {
+    letter-spacing: -0.01em;
   }
 
   ::-webkit-scrollbar {

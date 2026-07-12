@@ -22,15 +22,14 @@ const Card: React.FC<CardProps> = ({
   variant = 'default',
 }) => {
   const baseClasses: Record<string, string> = {
-    default: glass
-      ? 'bg-white/95 dark:bg-dark-800/90 backdrop-blur-lg border border-ink-100/70 dark:border-dark-700/60 shadow-card dark:shadow-dark-lg'
-      : 'bg-white dark:bg-dark-800 border border-ink-100 dark:border-dark-700 shadow-card',
+    default:
+      'bg-white dark:bg-dark-800/90 border border-ink-100 dark:border-dark-700/60 shadow-card dark:shadow-dark-lg',
     elevated:
-      'bg-white dark:bg-dark-850/95 backdrop-blur-lg border border-ink-50/80 dark:border-dark-750/50 shadow-xl dark:shadow-dark-xl',
+      'bg-white dark:bg-dark-850/95 border border-ink-100 dark:border-dark-750/50 shadow-card-hover dark:shadow-dark-xl',
     bordered:
-      'bg-white dark:bg-dark-800 border-2 border-ink-200 dark:border-dark-600 shadow-sm dark:shadow-dark-sm',
+      'bg-white dark:bg-dark-800 border border-ink-200 dark:border-dark-600 shadow-soft dark:shadow-dark-sm',
     warm:
-      'bg-gradient-to-br from-paper-50 to-paper-100 dark:from-primary-950/40 dark:to-dark-800 border border-paper-200/60 dark:border-primary-800/30 shadow-card',
+      'bg-gradient-to-br from-paper-50 to-paper-100 dark:from-primary-950/40 dark:to-dark-800 border border-ink-100 dark:border-primary-800/30 shadow-card',
   };
 
   const Component = animated ? motion.div : 'div';
@@ -51,7 +50,7 @@ const Card: React.FC<CardProps> = ({
         baseClasses[variant],
         'rounded-2xl overflow-hidden transition-all duration-300 ease-out',
         hoverable &&
-          'cursor-pointer hover:shadow-card-hover dark:hover:shadow-dark-xl hover:border-primary-300/70 dark:hover:border-primary-600/50',
+          'cursor-pointer hover:shadow-card-hover dark:hover:shadow-dark-xl hover:border-ink-200 dark:hover:border-primary-600/50',
         className
       )}
       onClick={onClick}

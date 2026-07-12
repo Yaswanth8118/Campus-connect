@@ -39,33 +39,33 @@ export default {
           950: '#3d2110',
         },
 
-        // ── Ink: Deep charcoal-blues for text ────────────
+        // ── Ink: Warm charcoal for text & borders (light theme) ──
         ink: {
-          50:  '#f6f7f9',
-          100: '#eceef2',
-          200: '#d5d9e2',
-          300: '#b0b8c9',
-          400: '#8590ab',
-          500: '#667291',
-          600: '#525c78',
-          700: '#434b62',
-          800: '#3a4053',
-          900: '#343847',
-          950: '#1a1c25',
+          50:  '#faf8f6',
+          100: '#f0ece7',   // hairline borders
+          200: '#e4ddd5',   // borders / dividers
+          300: '#cdc3b8',
+          400: '#a89d90',   // faint / icon idle
+          500: '#867a6d',   // secondary / muted text
+          600: '#6b6156',
+          700: '#574e45',   // body text
+          800: '#433c35',
+          900: '#2c2823',   // strong text
+          950: '#1c1915',   // headings
         },
 
-        // ── Paper: Warm off-white surfaces (light theme) ─
+        // ── Paper: Warm ivory surfaces & backgrounds (light theme) ─
         paper: {
-          50:  '#fefdfb',
-          100: '#fdf9f4',
-          200: '#faf3e8',
-          300: '#f5e9d6',
-          400: '#eddbc0',
-          500: '#e2c9a5',
-          600: '#d1ae82',
-          700: '#b8905e',
-          800: '#9a7648',
-          900: '#7e613d',
+          50:  '#fdfcf9',   // card tint / near-white
+          100: '#f7f4ee',   // page background — warm ivory
+          200: '#efebe2',   // subtle surface / secondary button
+          300: '#e5dfd4',   // hover surface
+          400: '#d5ccbe',
+          500: '#c2b6a4',
+          600: '#a89a85',
+          700: '#8c7d68',
+          800: '#6f6250',
+          900: '#574d40',
         },
 
         // ── Dark theme: Rich warm charcoal ───────────────
@@ -156,8 +156,10 @@ export default {
         'dark-xl':  '0 20px 25px -5px rgba(0,0,0,0.7), 0 8px 10px -6px rgba(0,0,0,0.4)',
         'glow-primary': '0 0 20px rgba(201,42,42,0.25), 0 0 40px rgba(201,42,42,0.10)',
         'glow-gold':    '0 0 20px rgba(196,127,42,0.25), 0 0 40px rgba(196,127,42,0.10)',
-        'card':         '0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.03)',
-        'card-hover':   '0 4px 20px rgba(201,42,42,0.08), 0 1px 4px rgba(0,0,0,0.04)',
+        // Soft, warm-tinted, diffuse — cards float on the ivory page (light theme)
+        'card':         '0 1px 2px rgba(40,36,30,0.04), 0 4px 14px rgba(40,36,30,0.06)',
+        'card-hover':   '0 8px 26px rgba(40,36,30,0.10), 0 2px 8px rgba(201,42,42,0.05)',
+        'soft':         '0 1px 2px rgba(40,36,30,0.05)',
       },
       borderRadius: { 'xl': '12px', '2xl': '16px', '3xl': '20px' },
     },
