@@ -123,7 +123,7 @@ export function SubjectsPage() {
       <Modal open={open} onClose={() => setOpen(false)} title={editing ? 'Edit Subject' : 'New Subject'}>
         <form onSubmit={save} className="space-y-4">
           <Input label="Subject Name" value={form.subject_name} onChange={(e) => setForm({ ...form, subject_name: e.target.value })} placeholder="Data Structures" fullWidth required />
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input label="Code" value={form.subject_code} onChange={(e) => setForm({ ...form, subject_code: e.target.value.toUpperCase() })} placeholder="CS201" fullWidth required />
             <Input label="Semester" type="number" value={form.semester} onChange={(e) => setForm({ ...form, semester: e.target.value })} fullWidth />
             <Input label="Credits" type="number" value={form.credits} onChange={(e) => setForm({ ...form, credits: e.target.value })} fullWidth />

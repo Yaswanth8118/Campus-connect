@@ -1,2 +1,5 @@
 node_modules/
 .env
+supabase/migrations/0002_avatars_storage.sql
+supabase/migrations/0003_username_login_rpc.sql
+supabase/seed/demo_seed.sql

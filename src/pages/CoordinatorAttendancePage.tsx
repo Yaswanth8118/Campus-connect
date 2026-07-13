@@ -111,7 +111,7 @@ export function CoordinatorAttendancePage() {
             <option value="">— Select subject —</option>
             {subjects.map((s) => <option key={s.id} value={s.id}>{s.subject_name}</option>)}
           </Select>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input label="Date" type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} fullWidth />
             <Select label="Status" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
               {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}

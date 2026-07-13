@@ -236,6 +236,54 @@ export async function dbUpdate<T = any>(
   return Array.isArray(rows) ? rows[0] : rows;
 }
 
+// Call a Postgres RPC (SECURITY DEFINER function). Works for anon (e.g. username→email).
+export async function rpcCall<T = any>(fn: string, args: Record<string, any>): Promise<T> {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify(args),
+  });
+  if (!res.ok) throw new Error(`RPC ${fn} failed`);
+  return res.json();
+}
+
+const AVATAR_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+const AVATAR_MAX = 5 * 1024 * 1024; // 5MB
+
+// Upload an avatar to the public "avatars" bucket under the caller's auth-uid folder.
+// Returns the public URL. Throws friendly errors for type/size/permission issues.
+export async function uploadAvatar(file: File): Promise<string> {
+  if (!AVATAR_TYPES.includes(file.type)) {
+    throw new Error('Please choose a JPG, PNG or WEBP image.');
+  }
+  if (file.size > AVATAR_MAX) {
+    throw new Error('Image must be 5MB or smaller.');
+  }
+  const session = getSession();
+  const token = session?.access_token;
+  const authUid = session?.user?.id;
+  if (!token || !authUid) throw new Error('You must be signed in to upload.');
+
+  const ext = (file.name.split('.').pop() || 'png').toLowerCase();
+  const path = `${authUid}/${Date.now()}.${ext}`;
+  const res = await fetch(`${SUPABASE_URL}/storage/v1/object/avatars/${path}`, {
+    method: 'POST',
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${token}`,
+      'Content-Type': file.type,
+      'x-upsert': 'true',
+    },
+    body: file,
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || 'Upload failed. Check that the "avatars" bucket exists.');
+  }
+  // cache-bust so the new image shows immediately
+  return `${SUPABASE_URL}/storage/v1/object/public/avatars/${path}?v=${Date.now()}`;
+}
+
 export async function dbDelete(table: string, matchQuery: string): Promise<void> {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${matchQuery}`, {
     method: 'DELETE',

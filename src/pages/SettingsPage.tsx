@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Phone, Mail, ImageIcon, AlertTriangle, LogOut, Save, Camera, Shield } from 'lucide-react';
+import { User, Phone, Mail, AlertTriangle, LogOut, Save, Camera, Shield } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { Card, CardBody, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -10,7 +10,8 @@ import Badge from '../components/ui/Badge';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { usersRepo } from '../services/entities';
-import { isSupabaseConfigured } from '../lib/supabase';
+import { isSupabaseConfigured, uploadAvatar } from '../lib/supabase';
+import { useRef } from 'react';
 
 export function SettingsPage() {
   const { user, logout, refreshProfile } = useAuthStore();
@@ -22,6 +23,29 @@ export function SettingsPage() {
     profileImage: user?.profileImage || '',
   });
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarPick = () => fileInputRef.current?.click();
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-selecting the same file
+    if (!file || !user) return;
+    if (!isSupabaseConfigured()) { toast.error('Storage not configured'); return; }
+    setUploading(true);
+    try {
+      const url = await uploadAvatar(file);
+      await usersRepo.update(user.id, { profile_image: url });
+      setFormData((f) => ({ ...f, profileImage: url }));
+      await refreshProfile(); // propagates avatar to sidebar, navbar, everywhere
+      toast.success('Photo updated');
+    } catch (err: any) {
+      toast.error(err?.message || 'Upload failed');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
@@ -91,10 +115,38 @@ export function SettingsPage() {
         <Card variant="warm">
           <CardBody className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
             <div className="relative flex-shrink-0">
-              <Avatar src={formData.profileImage || user?.profileImage} name={user?.name} size="xl" />
-              <button className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-primary-600 text-white flex items-center justify-center shadow-md hover:bg-primary-700 transition-colors">
-                <Camera size={13} />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+                className="hidden"
+                onChange={handleAvatarChange}
+              />
+              <button
+                type="button"
+                onClick={handleAvatarPick}
+                disabled={uploading}
+                aria-label="Change profile photo"
+                className="group relative rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-full"
+              >
+                <Avatar src={formData.profileImage || user?.profileImage} name={user?.name} size="xl" />
+                {/* hover overlay */}
+                <span className="absolute inset-0 rounded-full bg-ink-950/50 flex flex-col items-center justify-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Camera size={18} className="text-white" />
+                  <span className="text-[10px] font-medium text-white">Change</span>
+                </span>
+                {uploading && (
+                  <span className="absolute inset-0 rounded-full bg-ink-950/60 flex items-center justify-center">
+                    <span className="h-6 w-6 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                  </span>
+                )}
               </button>
+              <span
+                onClick={handleAvatarPick}
+                className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-primary-600 text-white flex items-center justify-center shadow-md hover:bg-primary-700 transition-colors cursor-pointer"
+              >
+                <Camera size={13} />
+              </span>
             </div>
             <div className="text-center sm:text-left">
               <h2 className="font-heading font-bold text-xl text-ink-950 dark:text-dark-50">{user?.name}</h2>
@@ -155,32 +207,9 @@ export function SettingsPage() {
                 fullWidth
               />
 
-              <Input
-                label="Profile Picture URL"
-                type="url"
-                value={formData.profileImage}
-                onChange={(e) => setFormData({ ...formData, profileImage: e.target.value })}
-                placeholder="https://example.com/photo.jpg"
-                icon={<ImageIcon size={16} />}
-                fullWidth
-              />
-
-              {formData.profileImage && (
-                <div className="flex items-center gap-4 p-4 rounded-2xl bg-paper-100 dark:bg-dark-800 border border-paper-200 dark:border-dark-700">
-                  <img
-                    src={formData.profileImage}
-                    alt="Profile preview"
-                    className="w-14 h-14 rounded-full object-cover ring-2 ring-primary-200 dark:ring-primary-800"
-                    onError={(e) => {
-                      e.currentTarget.src = 'https://images.pexels.com/photos/1484810/pexels-photo-1484810.jpeg';
-                    }}
-                  />
-                  <div>
-                    <p className="text-sm font-heading font-semibold text-ink-900 dark:text-dark-100">Preview</p>
-                    <p className="text-xs text-ink-500 dark:text-dark-400">This is how your profile picture will appear</p>
-                  </div>
-                </div>
-              )}
+              <p className="text-xs text-ink-500 dark:text-dark-400">
+                To change your profile photo, click your avatar above. JPG, PNG or WEBP, up to 5MB.
+              </p>
 
               <div className="flex justify-end pt-1">
                 <Button type="submit" icon={<Save size={16} />} isLoading={saving}>

@@ -154,7 +154,7 @@ export function GradesPage() {
             <option value="">— Select subject —</option>
             {subjects.map((s) => <option key={s.id} value={s.id}>{s.subject_name}</option>)}
           </Select>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input label="Internal" type="number" value={form.internal_marks} onChange={(e) => setForm({ ...form, internal_marks: e.target.value })} fullWidth />
             <Input label="External" type="number" value={form.external_marks} onChange={(e) => setForm({ ...form, external_marks: e.target.value })} fullWidth />
             <Input label="Assignment" type="number" value={form.assignment_marks} onChange={(e) => setForm({ ...form, assignment_marks: e.target.value })} fullWidth />

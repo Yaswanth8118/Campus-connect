@@ -125,7 +125,7 @@ export function RoomsPage() {
 
       <Modal open={open} onClose={() => setOpen(false)} title={editing ? 'Edit Room' : 'New Room'}>
         <form onSubmit={save} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input label="Room Number" value={form.room_number} onChange={(e) => setForm({ ...form, room_number: e.target.value })} placeholder="A-101" fullWidth required />
             <Input label="Building" value={form.building} onChange={(e) => setForm({ ...form, building: e.target.value })} placeholder="Block A" fullWidth />
             <Input label="Floor" type="number" value={form.floor} onChange={(e) => setForm({ ...form, floor: e.target.value })} fullWidth />

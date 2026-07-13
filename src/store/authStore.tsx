@@ -89,15 +89,18 @@ async function fetchProfileRow(authUserId: string): Promise<any | null> {
 
 export const useAuthStore = create<
   AuthState & {
+    awaitingEmailVerification: boolean;
     initialize: () => Promise<void>;
     login: (email: string, password: string) => Promise<void>;
     register: (data: { email: string; password: string; name: string; role: UserRole; department?: string; phone?: string }) => Promise<void>;
     logout: () => void;
     resetAuth: () => void;
     refreshProfile: () => Promise<void>;
+    clearAwaitingVerification: () => void;
   }
 >((set, get) => ({
   ...initialState,
+  awaitingEmailVerification: false,
 
   // Restore a persisted session on app startup. Called once from <App>.
   // Guarantees `initializing` ends false so protected routes stop showing the loader.
@@ -181,7 +184,11 @@ export const useAuthStore = create<
           toast.success(`Welcome back, ${user.name}!`);
           return;
         } catch (err: any) {
-          throw new Error(err.message || 'Invalid email or password');
+          const raw = String(err?.message || '');
+          if (/not confirmed|email.*confirm|confirm.*email/i.test(raw)) {
+            throw new Error('Please verify your email before logging in. Check your inbox for the confirmation link.');
+          }
+          throw new Error(raw || 'Invalid email or password');
         }
       }
 
@@ -218,6 +225,15 @@ export const useAuthStore = create<
           phone: data.phone || '',
         });
 
+        // With email confirmation ON, signup returns no session — the user must
+        // verify via the emailed link before they can log in.
+        if (!session.access_token) {
+          set({ isLoading: false, awaitingEmailVerification: true });
+          toast.success('Account created! Check your email to verify before logging in.', { duration: 6000 });
+          return;
+        }
+
+        // Confirmation OFF → immediate session.
         const user: User = {
           id: session.user.id,
           email: lowerEmail,
@@ -269,4 +285,6 @@ export const useAuthStore = create<
     const row = await fetchProfileRow(currentUser.id);
     if (row) set({ user: mapProfile(row) });
   },
+
+  clearAwaitingVerification: () => set({ awaitingEmailVerification: false }),
 }));

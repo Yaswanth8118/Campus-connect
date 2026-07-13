@@ -142,7 +142,7 @@ const EventsPage: React.FC = () => {
         <form onSubmit={save} className="space-y-4">
           <Input label="Event Name" value={form.event_name} onChange={(e) => setForm({ ...form, event_name: e.target.value })} placeholder="Tech Symposium" fullWidth required />
           <Input label="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Short description" fullWidth />
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input label="Start" type="datetime-local" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} fullWidth required />
             <Input label="End" type="datetime-local" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} fullWidth required />
             <Select label="Department" value={form.department_id} onChange={(e) => setForm({ ...form, department_id: e.target.value })}>
