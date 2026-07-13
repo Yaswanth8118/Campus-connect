@@ -1,10 +1,8 @@
 <div align="center">
 
-# 🎓 Campus Connect
+# Campus Connect
 
-### A role-based University Campus Management System (ERP)
-
-Secure, database-enforced, production-grade — built with React, TypeScript & Supabase.
+### Secure, role-based university ERP built with React, TypeScript, Supabase, and PostgreSQL RLS
 
 ![React](https://img.shields.io/badge/React-18.3-61DAFB?logo=react&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.5-3178C6?logo=typescript&logoColor=white)
@@ -17,224 +15,333 @@ Secure, database-enforced, production-grade — built with React, TypeScript & S
 
 ---
 
-## Overview
+## 1. Project Overview
 
-Campus Connect is a full-stack campus management ERP for Admin, Coordinator, Faculty, and Student roles. It uses Supabase and PostgreSQL Row Level Security as the real authorization boundary, so the UI only shows what the database already permits.
+Campus Connect is a full-stack university campus management ERP for administrators, coordinators, faculty members, and students.
 
-If you want the shortest summary: it is a typed React app with live data, role-based dashboards, secure auth, and database-enforced access control.
+It centralizes academic and administrative workflows such as authentication, user management, departments, subjects, rooms, events, attendance, grades, announcements, reports, and analytics.
 
-## Quick Start
+The project is designed to show a production-inspired architecture rather than a demo-only CRUD app. The browser is only one part of the system; authorization is enforced in the database through PostgreSQL Row Level Security.
 
-### Install
+High-level flow:
+
+- A user signs in with email or username.
+- React loads the role-specific workspace.
+- The service layer sends typed requests through Supabase.
+- PostgreSQL applies RLS policies to every query.
+- The client receives only the rows it is allowed to see.
+
+## 2. Why I Built This
+
+Most student ERP projects stop at mock data, local state, and client-side role checks. That approach is useful for learning, but it does not reflect how real systems are secured or structured.
+
+Campus Connect was built to demonstrate stronger engineering practices:
+
+- authorization enforced in PostgreSQL instead of React
+- a normalized relational model instead of JSON fixtures
+- real authentication with JWT sessions and refresh tokens
+- a typed repository layer instead of scattered fetch calls
+- storage-backed profile images instead of pasted URLs
+- repeatable database migrations instead of manual setup
+
+The goal is to look and behave like a real internal platform, not a college assignment.
+
+## 3. Key Features
+
+### Authentication and access
+
+- Email login and username login
+- Secure signup with verification flow
+- Session persistence with silent token refresh
+- Role reloading from the database on restore
+
+### Role-specific workspaces
+
+- Admin dashboard for global management
+- Coordinator workspace for department oversight
+- Faculty workspace for attendance and grades
+- Student workspace for academic visibility
+
+### Platform capabilities
+
+- Live CRUD operations across the main modules
+- Search, filtering, and responsive data tables
+- Light and dark theme support
+- Avatar upload through Supabase Storage
+- Polished empty, loading, and error states
+
+## 4. How It Works
+
+The application is intentionally layered so each part has one responsibility.
+
+```mermaid
+flowchart TD
+  U[User] --> R[React Frontend]
+  R --> S[Service Layer]
+  S --> C[Supabase Client]
+  C --> A[Supabase Auth]
+  C --> D[PostgREST]
+  C --> T[Supabase Storage]
+  D --> P[PostgreSQL]
+  P --> RLS[Row Level Security]
+  RLS --> X[Allowed Response]
+  T --> X
+  A --> X
+```
+
+Request path:
+
+1. The user interacts with a page in React.
+2. The page calls the typed service or repository layer.
+3. The service layer calls the Supabase client.
+4. Supabase routes auth, database, and storage requests.
+5. PostgreSQL evaluates RLS policies for the current JWT.
+6. The database returns only authorized rows.
+
+## 5. Project Architecture
+
+Campus Connect follows a backend-as-a-service model. There is no custom Express server. The frontend talks directly to Supabase, and PostgreSQL remains the enforcement point for access control.
+
+```mermaid
+flowchart LR
+  subgraph Frontend
+    UI[React Pages / Components]
+    Store[State Stores]
+    Repo[Typed Service / Repository Layer]
+  end
+
+  subgraph Platform
+    SB[Supabase Client]
+    AUTH[Supabase Auth]
+    API[PostgREST]
+    ST[Supabase Storage]
+  end
+
+  subgraph Database
+    DB[(PostgreSQL)]
+    RLS[Row Level Security]
+  end
+
+  UI --> Store --> Repo --> SB
+  SB --> AUTH
+  SB --> API --> DB
+  DB --> RLS
+  SB --> ST
+```
+
+### Frontend
+
+The UI is built with React, TypeScript, Vite, Tailwind CSS, React Router, Framer Motion, and Lucide icons. Pages are role-aware and use shared UI components.
+
+### Backend platform
+
+Supabase provides authentication, REST access through PostgREST, and file storage. The app does not depend on a custom backend service.
+
+### Database
+
+PostgreSQL stores the relational model, authorization policies, helper functions, and application data.
+
+### Authentication
+
+Supabase Auth handles JWT sessions, password verification, refresh tokens, and email confirmation.
+
+### Storage
+
+Supabase Storage is used for avatar uploads with owner-scoped policies.
+
+## 6. Tech Stack
+
+### Frontend
+
+| Area | Stack |
+| --- | --- |
+| UI library | React 18 |
+| Language | TypeScript |
+| Build tool | Vite |
+| Routing | React Router |
+| Animation | Framer Motion |
+| Icons | Lucide React |
+| Styling | Tailwind CSS |
+
+### Backend
+
+| Area | Stack |
+| --- | --- |
+| App platform | Supabase |
+| API layer | PostgREST |
+| Auth | Supabase Auth |
+| Database | PostgreSQL |
+| File storage | Supabase Storage |
+
+### Security
+
+| Area | Stack |
+| --- | --- |
+| Row-level authorization | PostgreSQL RLS |
+| Session model | JWT + refresh tokens |
+| Privileged SQL helpers | SECURITY DEFINER functions |
+| Signup verification | Email confirmation |
+
+### Styling and deployment
+
+| Area | Stack |
+| --- | --- |
+| Styling system | Tailwind CSS |
+| Hosting | Vercel |
+| Backend hosting | Supabase |
+
+## 7. Folder Structure
+
+Only the important folders are shown below.
+
+```text
+Campus-connect/
+├── src/
+│   ├── components/
+│   │   ├── auth/
+│   │   ├── layout/
+│   │   └── ui/
+│   ├── pages/
+│   ├── services/
+│   ├── store/
+│   ├── lib/
+│   └── types/
+├── supabase/
+│   ├── migrations/
+│   └── seed/
+├── public/
+├── index.html
+├── vite.config.ts
+├── tailwind.config.js
+└── README.md
+```
+
+## 8. Database Overview
+
+The database is normalized and organized around the core campus workflow instead of being built as a flat CRUD dump.
+
+Main data domains:
+
+- identity and roles
+- departments and academic ownership
+- faculty, students, and coordinators
+- subjects, rooms, and events
+- attendance, grades, reports, and announcements
+
+The relationships are mostly foreign-key driven, with users linked to roles and departments, subjects linked to departments and faculty, and operational records linked back to the relevant actor or owner.
+
+This structure reduces duplication, keeps writes consistent, and makes RLS policies easier to reason about.
+
+## 9. Role-Based Access Control
+
+RLS is the actual authorization boundary. The UI mirrors permissions, but the database decides access.
+
+| Capability | Admin | Coordinator | Faculty | Student |
+| --- | :---: | :---: | :---: | :---: |
+| User management | Yes | No | No | No |
+| Role management | Yes | No | No | No |
+| Department management | Yes | Yes | No | No |
+| Events | Yes | Yes | Limited | View only |
+| Attendance | Yes | Department scope | Own subjects | View own |
+| Grades | Yes | Department scope | Own subjects | View own |
+| Announcements | Yes | Yes | Yes | View only |
+| Reports and analytics | Yes | Department scope | Limited | View only |
+| Dashboard access | Yes | Yes | Yes | Yes |
+
+## 10. Security
+
+- JWT authentication is used for all signed-in sessions.
+- PostgreSQL Row Level Security is the core authorization layer.
+- SECURITY DEFINER helper functions are used where database lookups must bypass recursion.
+- Storage policies restrict avatar uploads to the correct owner scope.
+- Least privilege is enforced by shipping only the public anon key to the browser.
+
+## 11. Installation
+
+### Prerequisites
+
+- Node.js 18 or later
+- A Supabase project
+
+### Clone the repository
+
 ```bash
 git clone https://github.com/Yaswanth8118/Campus-connect.git
-cd campus-connect
+cd Campus-connect
+```
+
+### Install dependencies
+
+```bash
 npm install
 ```
 
-### Configure
-```bash
-cp .env.example .env
-```
+### Environment variables
 
-Fill in:
+Create a `.env` file from `.env.example` and set:
+
 ```env
 VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=
 ```
 
-### Run
+### Start the development server
+
 ```bash
 npm run dev
 ```
 
-## Key Features
+### Additional scripts
 
-- Real authentication with email or username + password.
-- Session persistence with silent refresh.
-- Database-enforced RBAC with PostgreSQL RLS.
-- Role-specific dashboards for all four user roles.
-- Live CRUD modules for users, departments, subjects, rooms, events, attendance, grades, announcements, reports, and analytics.
-- Avatar upload through Supabase Storage.
-- Responsive UI with light and dark themes.
-
-## Tech Stack
-
-### Frontend
-| Tool | Purpose |
-| --- | --- |
-| React 18 | UI library |
-| TypeScript 5.5 | Type safety |
-| Vite 5 | Build tool |
-| Tailwind CSS 3.4 | Styling |
-| React Router v6 | Routing |
-| Framer Motion | Animations |
-| Lucide React | Icons |
-
-### Backend / Platform
-| Tool | Purpose |
-| --- | --- |
-| Supabase Auth | Authentication |
-| PostgreSQL | Database |
-| PostgREST | Auto-generated REST API |
-| Supabase Storage | Avatar uploads |
-
-## Setup Details
-
-### Database migrations
-Run these in the Supabase SQL editor in order:
-
-1. `supabase/migrations/0001_campus_erp_baseline.sql`
-2. `supabase/migrations/0002_avatars_storage.sql`
-3. `supabase/migrations/0003_username_login_rpc.sql`
-
-### First admin
-Create a user, then promote it with:
-
-```sql
-update users
-set role_id = (select id from roles where role_name = 'admin')
-where email = 'you@example.com';
-```
-
-### Scripts
 ```bash
-npm run dev
 npm run build
 npm run preview
 npm run lint
 ```
 
-## Deployment
+## 12. Deployment
 
-Build the frontend with `npm run build` and deploy `dist/` to Vercel, Netlify, or Cloudflare Pages. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in the hosting environment.
+The frontend is deployed as a static application on Vercel.
 
-> Live demo: [Try Campus Connect](https://campus-connect-one-tan.vercel.app/)
+Deployment steps:
 
-## Why It Stands Out
+1. Run `npm run build` to produce the production bundle.
+2. Deploy the generated `dist/` directory to Vercel.
+3. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in the Vercel environment settings.
+4. Apply the Supabase migrations to the target project.
 
-- Authorization is enforced in the database, not in the client.
-- The app uses a typed repository layer instead of scattered fetch calls.
-- Roles are re-read from the database on every restore, so access stays current.
-- Profile photos are uploaded to object storage instead of stored as pasted URLs.
-- The schema is normalized and designed for real relational data, not demo data.
+Supabase handles the authentication, storage, and database side of the deployment. No separate backend server is required.
 
-## Security
+## 13. Future Improvements
 
-- Row Level Security on all important tables.
-- `SECURITY DEFINER` helper functions to avoid policy recursion.
-- JWT-based auth with refresh tokens and email verification.
-- Owner-scoped storage policies for avatars.
-- Least-privileged browser exposure: only the anon key is shipped to the client.
+- Realtime attendance updates
+- Realtime announcement delivery
+- CSV export for reports
+- PDF export for selected views
+- Audit log viewer
+- Timetable and room conflict detection
+- Route-level code splitting for smaller bundles
+- Automated tests with Vitest and Testing Library
 
-## Architecture
-
-Campus Connect is a backend-as-a-service app. The React client talks directly to Supabase, and PostgreSQL decides what the user can see or change.
-
-```mermaid
-flowchart LR
-  UI[React SPA] --> Repo[Typed repository layer]
-  Repo --> Client[Supabase client]
-  Client --> REST[PostgREST]
-  Client --> Auth[Supabase Auth]
-  Client --> Storage[Supabase Storage]
-  REST --> DB[PostgreSQL + RLS]
-  Auth --> DB
-```
-
-## Database Model
-
-The app is normalized around 15 tables, including roles, users, departments, faculty, students, coordinators, subjects, rooms, events, attendance, grades, announcements, reports, and audit logs.
-
-The important idea is simple: the browser never gets to decide access. RLS does.
-
-## Authorization Example
-
-```sql
-create policy grades_select on grades for select to authenticated
-using (
-  app_role() = 'admin'
-  or student_id = app_student_id()
-  or faculty_id = app_faculty_id()
-  or exists (
-    select 1
-    from subjects s
-    where s.id = grades.subject_id
-      and s.department_id = app_department_id()
-      and app_role() = 'coordinator'
-  )
-);
-```
-
-This looks longer than a client-side check, but it is safer because the database is the source of truth.
-
-## Core Modules
-
-- Authentication
-- Users
-- Departments
-- Subjects
-- Rooms
-- Events
-- Attendance
-- Grades
-- Announcements
-- Reports
-- Analytics
-- Profile and settings
-
-## Remaining Notes
-
-### Design Decisions
-
-- Keep authorization in PostgreSQL, not React.
-- Keep app profile data separate from auth identity.
-- Keep data access in one typed service layer.
-- Re-read role information on restore to avoid stale permissions.
-
-### Highlights
-
-- Database-enforced RBAC.
-- Session persistence with silent refresh.
-- Username or email login.
-- Avatar uploads with storage policies.
-- Demo accounts that use the real auth flow.
-
-### Future Enhancements
-
-- Realtime attendance and announcements.
-- CSV or PDF export for reports.
-- Audit log viewer.
-- Timetable and room conflict detection.
-- Automated tests and CI.
-
-### Contributing
+## 14. Contributing
 
 Contributions are welcome.
 
-1. Fork the repository
-2. Create a branch
-3. Commit your changes
-4. Push the branch
-5. Open a pull request
+1. Fork the repository.
+2. Create a branch for your change.
+3. Commit your work with a clear message.
+4. Push the branch to your fork.
+5. Open a pull request.
 
-### License
+Please keep changes consistent with the layered architecture and add database policies for any new protected data.
 
-Released under the MIT License. See [LICENSE](LICENSE) for details.
+## 15. License
 
----
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
-## 📬 Contact
+## 16. Contact
 
 **Yaswanth**
 
 - GitHub: [@Yaswanth8118](https://github.com/Yaswanth8118)
-- Project: [Campus Connect](https://github.com/Yaswanth8118/Campus-connect)
-
-<div align="center">
-
-Built with attention to **security, data integrity, and clean architecture**.
-
-⭐ If this project helped or impressed you, consider starring the repo.
-
-</div>
+- Project repository: [Campus Connect](https://github.com/Yaswanth8118/Campus-connect)
